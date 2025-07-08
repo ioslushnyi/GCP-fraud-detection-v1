@@ -17,48 +17,47 @@ feature_order = joblib.load("ml-model/feature_order_v3.pkl")
 FAKE_EVENTS = [
     {
         "user_id": "user_1",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(),
         "amount": 120.5,
         "currency": "USD",
         "country": "US",
         "ip_country": "US",
-        "device": "mobile"
+        "device": "Windows"
     },
     {
         "user_id": "user_1",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(),
         "amount": 400.0,
         "currency": "USD",
         "country": "US",
         "ip_country": "US",
-        "device": "desktop"
+        "device": "Mac"
     },
     {
         "user_id": "user_2",
-        "timestamp": datetime.utcnow().isoformat(),
-        "amount": 50.0,
+        "timestamp": datetime.now(),
+        "amount": 9999.0,
         "currency": "EUR",
-        "country": "DE",
+        "country": "PL",
         "ip_country": "DE",
-        "device": "tablet"
+        "device": "Linux"
     }
 ]
 
 # --- Scoring ---
 def score_event(event):
     try:
-        timestamp = datetime.fromisoformat(event["timestamp"])
-        event["hour"] = timestamp.hour
-        event["txn_count_last_10min"] = 1  # For now
+        def safe_encode(encoder, value):
+            return encoder.transform([value])[0] if value in encoder.classes_ else -1
 
         df = pd.DataFrame([{
             "amount": event["amount"],
-            "currency": le_currency.transform([event["currency"]])[0] if event["currency"] in le_currency.classes_ else -1,
-            "country": le_country.transform([event["country"]])[0] if event["country"] in le_country.classes_ else -1,
-            "ip_country": le_ip_country.transform([event["ip_country"]])[0] if event["ip_country"] in le_ip_country.classes_ else -1,
-            "device": le_device.transform([event["device"]])[0] if event["device"] in le_device.classes_ else -1,
-            "hour": event["hour"],
-            "txn_count_last_10min": event["txn_count_last_10min"]
+            "currency": safe_encode(le_currency, event["currency"]),
+            "country": safe_encode(le_country, event["country"]),
+            "ip_country": safe_encode(le_ip_country, event["ip_country"]),
+            "device": safe_encode(le_device, event["device"]),
+            "hour": event["timestamp"].hour,
+            "txn_count_last_10min": 5  # Placeholder for now
         }])
 
         risk_score = model.predict_proba(df[feature_order])[0][1]
@@ -97,6 +96,7 @@ def score_event(event):
 # --- Beam Test Pipeline ---
 def run():
     options = PipelineOptions()
+    options.view_as(StandardOptions).runner = 'DirectRunner'
     options.view_as(StandardOptions).streaming = False
 
     with beam.Pipeline(options=options) as p:
