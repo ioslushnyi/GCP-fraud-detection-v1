@@ -9,18 +9,19 @@ from apache_beam.transforms.timeutil import TimeDomain
 import joblib
 import json
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 import typing
 import time
 import argparse
+from typing import Tuple
 
 # --- Load model and encoders globally ---
-model = joblib.load("fraud_model_v3.pkl")
-le_currency = joblib.load("le_currency_v3.pkl")
-le_country = joblib.load("le_country_v3.pkl")
-le_ip_country = joblib.load("le_ip_country_v3.pkl")
-le_device = joblib.load("le_device_v3.pkl")
-feature_order = joblib.load("feature_order_v3.pkl")
+model = joblib.load("ml-model/fraud_model_v3.pkl")
+le_currency = joblib.load("ml-model/le_currency_v3.pkl")
+le_country = joblib.load("ml-model/le_country_v3.pkl")
+le_ip_country = joblib.load("ml-model/le_ip_country_v3.pkl")
+le_device = joblib.load("ml-model/le_device_v3.pkl")
+feature_order = joblib.load("ml-model/feature_order_v3.pkl")
 
 # --- Helper: safe encoding ---
 # This function encodes categorical values using pre-fitted LabelEncoders.
@@ -55,7 +56,7 @@ class AddTxnCount(beam.DoFn):
     TXN_STATE = BagStateSpec('txn_timestamps', VarIntCoder())
     CLEANUP_TIMER = TimerSpec('cleanup', TimeDomain.WATERMARK)
 
-    def process(self, element, txn_state=beam.DoFn.StateParam(TXN_STATE),
+    def process(self, element: Tuple[str, dict], txn_state=beam.DoFn.StateParam(TXN_STATE),
                          timer=beam.DoFn.TimerParam(CLEANUP_TIMER)):
         user_id, event = element
         try:
@@ -63,7 +64,8 @@ class AddTxnCount(beam.DoFn):
         except Exception:
             return
         txn_state.add(ts)
-        timer.set(datetime.fromtimestamp(ts + 600))
+        #timer.set(datetime.fromtimestamp(ts + 600))
+        timer.set(datetime.fromtimestamp(ts + 600, tz=timezone.utc))
         recent = [t for t in txn_state.read() if t >= ts - 600]
         txn_state.clear()
         for t in recent:
@@ -121,7 +123,7 @@ def run():
             p
             | "ReadFromPubSub" >> beam.io.ReadFromPubSub(subscription="projects/fraud-detection-v1/subscriptions/test-sub")
             | "DecodePubSub" >> beam.Map(lambda m: json.loads(m.decode("utf-8")))
-            | "KeyByUser" >> beam.Map(lambda x: (x["user_id"], x))
+            | "KeyByUser" >> beam.Map(lambda x: (x["user_id"], x)).with_output_types(Tuple[str, dict])
             | "AddTxnCount" >> beam.ParDo(AddTxnCount())
             | "ScoreEvent" >> beam.Map(score_event)
             | "FilterNone" >> beam.Filter(lambda x: x is not None)
