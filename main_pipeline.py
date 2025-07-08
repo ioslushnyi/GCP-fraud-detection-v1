@@ -1,5 +1,3 @@
-# main_pipeline.py
-
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions
 from apache_beam.coders import VarIntCoder
@@ -14,6 +12,7 @@ import typing
 import time
 import argparse
 from typing import Tuple
+import logging
 
 # --- Load model and encoders globally ---
 model = joblib.load("ml-model/fraud_model_v3.pkl")
@@ -26,32 +25,44 @@ feature_order = joblib.load("ml-model/feature_order_v3.pkl")
 # --- Helper: safe encoding ---
 # This function encodes categorical values using pre-fitted LabelEncoders.
 def safe_encode(encoder, value):
-            return encoder.transform([value])[0] if value in encoder.classes_ else -1
+    return encoder.transform([value])[0] if value in encoder.classes_ else -1
+
+# --- Helper: safe decoding ---
+# This function decodes bytes to JSON, handling errors gracefully.
+def safe_decode(m):
+    try:
+        return json.loads(m.decode("utf-8"))
+    except Exception as e:
+        print("\u274c Decode error:", e)
+        return None
+
 # --- Parse command line arguments ---
+# This function sets up argument parsing for the pipeline runner.
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--runner', default='DirectRunner')
-    #parser.add_argument('--env', default='local', choices=['local', 'production'])
+    parser.add_argument('--runner', default='DirectRunner', choices=['DirectRunner', 'DataflowRunner'])
     return parser.parse_args()
 
 # --- Helper: build enriched output ---
+# This function formats the event with additional fields for BigQuery.
 def get_enriched_event(event: dict, risk_score: float, fraud_label: int, risk_level: str) -> dict:
     return {
-        "user_id": event["user_id"],
-        "event_time": event["timestamp"],
-        "amount": event["amount"],
-        "currency": event["currency"],
-        "country": event["country"],
-        "ip_country": event["ip_country"],
-        "device": event["device"],
-        "hour": datetime.fromisoformat(event["timestamp"]).hour,
-        "txn_count_last_10min": event.get("txn_count_last_10min", 0),
-        "fraud_score": risk_score,
-        "fraud_label": fraud_label,
-        "risk_level": risk_level
+        "user_id": str(event["user_id"]),
+        "event_time": datetime.fromisoformat(event["timestamp"]).replace(microsecond=0).isoformat() + "Z",
+        "amount": float(event["amount"]),  # cast
+        "currency": str(event["currency"]),
+        "country": str(event["country"]),
+        "ip_country": str(event["ip_country"]),
+        "device": str(event["device"]),
+        "hour": int(event.get("hour", 0)),
+        "txn_count_last_10min": int(event.get("txn_count_last_10min", 0)),
+        "fraud_score": float(risk_score),  # cast
+        "fraud_label": int(fraud_label),   # cast
+        "risk_level": str(risk_level)
     }
 
-# --- User state tracker ---
+# --- Beam DoFn to add transaction count ---
+# This function maintains a state of transaction timestamps and counts transactions in the last 10 minutes.
 class AddTxnCount(beam.DoFn):
     TXN_STATE = BagStateSpec('txn_timestamps', VarIntCoder())
     CLEANUP_TIMER = TimerSpec('cleanup', TimeDomain.WATERMARK)
@@ -64,7 +75,6 @@ class AddTxnCount(beam.DoFn):
         except Exception:
             return
         txn_state.add(ts)
-        #timer.set(datetime.fromtimestamp(ts + 600))
         timer.set(datetime.fromtimestamp(ts + 600, tz=timezone.utc))
         recent = [t for t in txn_state.read() if t >= ts - 600]
         txn_state.clear()
@@ -81,23 +91,11 @@ class AddTxnCount(beam.DoFn):
         for t in recent:
             txn_state.add(t)
 
-# --- Fraud scoring ---
+# --- Function to score events ---
+# This function takes an event, processes it, and returns an enriched event with risk score and risk level.
 def score_event(event: dict) -> typing.Optional[dict]:
-    try:
-        timestamp = datetime.fromisoformat(event["timestamp"])
-        X = pd.DataFrame([{
-            "amount": event["amount"],
-            "currency": safe_encode(le_currency, event["currency"]),
-            "country": safe_encode(le_country, event["country"]),
-            "ip_country": safe_encode(le_ip_country, event["ip_country"]),
-            "device": safe_encode(le_device, event["device"]),
-            "hour": timestamp.hour,
-            "txn_count_last_10min": event["txn_count_last_10min"]
-        }])
-        
-        risk_score = model.predict_proba(X[feature_order])[0][1]
-        fraud_label = int(risk_score > 0.5)
-        risk_level = (
+    def get_risk_level(risk_score: float) -> str:
+        return  (
             "critical" if risk_score > 0.9 else
             "high" if risk_score > 0.7 else
             "medium-high" if risk_score > 0.5 else
@@ -105,16 +103,50 @@ def score_event(event: dict) -> typing.Optional[dict]:
             "low" if risk_score > 0.1 else
             "minimal"
         )
+    try:
+        X = pd.DataFrame([{
+            "amount": event["amount"],
+            "currency": safe_encode(le_currency, event["currency"]),
+            "country": safe_encode(le_country, event["country"]),
+            "ip_country": safe_encode(le_ip_country, event["ip_country"]),
+            "device": safe_encode(le_device, event["device"]),
+            "hour": datetime.fromisoformat(event["timestamp"]).hour,
+            "txn_count_last_10min": event["txn_count_last_10min"]
+        }])
+
+        risk_score = model.predict_proba(X[feature_order])[0][1]
+        fraud_label = int(risk_score > 0.5)
+        risk_level = get_risk_level(risk_score)
+
         return get_enriched_event(event, risk_score, fraud_label, risk_level)
     except Exception as e:
-        print("❌ Scoring error:", e)
+        print("\u274c Scoring error:", e)
         return None
 
-# --- Main runner ---
+# --- Beam DoFn to log rows ---
+# This function logs each row processed in the pipeline for debugging purposes.
+class LogRow(beam.DoFn):
+    def process(self, element):
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info(f"🧪 {element}")
+        yield element
+
+# --- Main runner function ---
+# This function sets up the Apache Beam pipeline with the specified options and transforms.
 def run():
     args = parse_args()
+    runner_opts = []
+    if args.runner == "DataflowRunner":
+        runner_opts = [
+            "--runner=DataflowRunner",
+            "--project=fraud-detection-v1",
+            "--region=us-central1",
+            "--temp_location=gs://fraud-detection-temp-bucket/temp",
+            "--staging_location=gs://fraud-detection-temp-bucket/staging",
+            "--streaming"
+        ]
 
-    options = PipelineOptions()
+    options = PipelineOptions(runner_opts)
     options.view_as(StandardOptions).runner = args.runner
     options.view_as(StandardOptions).streaming = True
 
@@ -122,33 +154,34 @@ def run():
         (
             p
             | "ReadFromPubSub" >> beam.io.ReadFromPubSub(subscription="projects/fraud-detection-v1/subscriptions/test-sub")
-            | "DecodePubSub" >> beam.Map(lambda m: json.loads(m.decode("utf-8")))
+            | "DecodePubSub" >> beam.Map(safe_decode)
+            | "FilterValid" >> beam.Filter(lambda x: x is not None)
             | "KeyByUser" >> beam.Map(lambda x: (x["user_id"], x)).with_output_types(Tuple[str, dict])
             | "AddTxnCount" >> beam.ParDo(AddTxnCount())
             | "ScoreEvent" >> beam.Map(score_event)
             | "FilterNone" >> beam.Filter(lambda x: x is not None)
-            | "PrintOutput" >> beam.Map(print) #NOT FRO PRODUCTION
-            # | "WriteToBigQuery" >> beam.io.WriteToBigQuery(
-            #     table="your_project.your_dataset.fraud_scored_events",
-            #     schema={
-            #         "fields": [
-            #             {"name": "user_id", "type": "STRING"},
-            #             {"name": "event_time", "type": "TIMESTAMP"},
-            #             {"name": "amount", "type": "FLOAT"},
-            #             {"name": "currency", "type": "STRING"},
-            #             {"name": "country", "type": "STRING"},
-            #             {"name": "ip_country", "type": "STRING"},
-            #             {"name": "device", "type": "STRING"},
-            #             {"name": "hour", "type": "INTEGER"},
-            #             {"name": "txn_count_last_10min", "type": "INTEGER"},
-            #             {"name": "fraud_score", "type": "FLOAT"},
-            #             {"name": "fraud_label", "type": "INTEGER"},
-            #             {"name": "risk_level", "type": "STRING"}
-            #         ]
-            #     },
-            #     write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
-            #     create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED
-            # )
+            | "LogRow" >> beam.ParDo(LogRow())
+            | "WriteToBigQuery" >> beam.io.WriteToBigQuery(
+                table="fraud-detection-v1.realtime_analytics.fraud_scored_events",
+                schema={
+                    "fields": [
+                        {"name": "user_id", "type": "STRING"},
+                        {"name": "event_time", "type": "TIMESTAMP"},
+                        {"name": "amount", "type": "FLOAT"},
+                        {"name": "currency", "type": "STRING"},
+                        {"name": "country", "type": "STRING"},
+                        {"name": "ip_country", "type": "STRING"},
+                        {"name": "device", "type": "STRING"},
+                        {"name": "hour", "type": "INTEGER"},
+                        {"name": "txn_count_last_10min", "type": "INTEGER"},
+                        {"name": "fraud_score", "type": "FLOAT"},
+                        {"name": "fraud_label", "type": "INTEGER"},
+                        {"name": "risk_level", "type": "STRING"}
+                    ]
+                },
+                write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
+                create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED
+            )
         )
 
 if __name__ == "__main__":
