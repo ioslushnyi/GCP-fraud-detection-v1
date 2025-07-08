@@ -17,7 +17,7 @@ feature_order = joblib.load("ml-model/feature_order_v3.pkl")
 FAKE_EVENTS = [
     {
         "user_id": "user_1",
-        "timestamp": datetime.now(),
+        "timestamp": datetime.now().isoformat(),
         "amount": 120.5,
         "currency": "USD",
         "country": "US",
@@ -26,7 +26,7 @@ FAKE_EVENTS = [
     },
     {
         "user_id": "user_1",
-        "timestamp": datetime.now(),
+        "timestamp": datetime.now().isoformat(),
         "amount": 400.0,
         "currency": "USD",
         "country": "US",
@@ -35,7 +35,7 @@ FAKE_EVENTS = [
     },
     {
         "user_id": "user_2",
-        "timestamp": datetime.now(),
+        "timestamp": datetime.now().isoformat(),
         "amount": 9999.0,
         "currency": "EUR",
         "country": "PL",
@@ -51,7 +51,8 @@ def score_event(event):
             return encoder.transform([value])[0] if value in encoder.classes_ else -1
 
         # Enrich event before scoring
-        event["hour"] = event["timestamp"].hour
+        timestamp = datetime.fromisoformat(event["timestamp"])
+        event["hour"] = timestamp.hour
         event["txn_count_last_10min"] = 5
 
         df = pd.DataFrame([{
