@@ -14,9 +14,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
-from collections import deque
 import matplotlib.pyplot as plt
-
 
 # --- Setup ---
 fake = Faker()
@@ -66,7 +64,7 @@ def generate_payment(user_id=None, base_time=None):
         or (is_large_amount and is_night_time and is_suspicious_device and currency != "PLN")
         or (country != ip_country and is_large_amount and currency != "PLN")
         or (country != ip_country and is_country_currency_mismatch and is_suspicious_device)
-    ) #if random.random() > 0.1 else 0  # Introduce some randomness in fraud labeling
+    ) if random.random() > 0.1 else 0  # Introduce some randomness in fraud labeling
 
     return {
         "transaction_id": str(uuid.uuid4()),

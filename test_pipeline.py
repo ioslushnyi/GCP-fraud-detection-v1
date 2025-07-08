@@ -16,24 +16,6 @@ feature_order = joblib.load("ml-model/feature_order_v3.pkl")
 # --- Dummy input events for local testing ---
 FAKE_EVENTS = [
     {
-        "user_id": "user_1",
-        "timestamp": datetime.now().isoformat(),
-        "amount": 120.5,
-        "currency": "USD",
-        "country": "US",
-        "ip_country": "US",
-        "device": "Windows"
-    },
-    {
-        "user_id": "user_1",
-        "timestamp": datetime.now().isoformat(),
-        "amount": 400.0,
-        "currency": "USD",
-        "country": "US",
-        "ip_country": "US",
-        "device": "Mac"
-    },
-    {
         "user_id": "user_2",
         "timestamp": datetime.now().isoformat(),
         "amount": 9999.0,
@@ -64,7 +46,8 @@ def score_event(event):
             "hour": event["hour"],
             "txn_count_last_10min": event["txn_count_last_10min"]
         }])
-
+        print("\n--- Input Features ---")
+        print(df)
         risk_score = model.predict_proba(df[feature_order])[0][1]
         fraud_label = int(risk_score > 0.5)
         risk_level = (
