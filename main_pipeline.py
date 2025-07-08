@@ -22,6 +22,10 @@ le_ip_country = joblib.load("le_ip_country_v3.pkl")
 le_device = joblib.load("le_device_v3.pkl")
 feature_order = joblib.load("feature_order_v3.pkl")
 
+# --- Helper: safe encoding ---
+# This function encodes categorical values using pre-fitted LabelEncoders.
+def safe_encode(encoder, value):
+            return encoder.transform([value])[0] if value in encoder.classes_ else -1
 # --- Parse command line arguments ---
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -30,17 +34,17 @@ def parse_args():
     return parser.parse_args()
 
 # --- Helper: build enriched output ---
-def get_enriched_payload(payload: dict, risk_score: float, fraud_label: int, risk_level: str) -> dict:
+def get_enriched_event(event: dict, risk_score: float, fraud_label: int, risk_level: str) -> dict:
     return {
-        "user_id": payload["user_id"],
-        "event_time": payload["timestamp"],
-        "amount": payload["amount"],
-        "currency": payload["currency"],
-        "country": payload["country"],
-        "ip_country": payload["ip_country"],
-        "device": payload["device"],
-        "hour": datetime.fromisoformat(payload["timestamp"]).hour,
-        "txn_count_last_10min": payload.get("txn_count_last_10min", 0),
+        "user_id": event["user_id"],
+        "event_time": event["timestamp"],
+        "amount": event["amount"],
+        "currency": event["currency"],
+        "country": event["country"],
+        "ip_country": event["ip_country"],
+        "device": event["device"],
+        "hour": datetime.fromisoformat(event["timestamp"]).hour,
+        "txn_count_last_10min": event.get("txn_count_last_10min", 0),
         "fraud_score": risk_score,
         "fraud_label": fraud_label,
         "risk_level": risk_level
@@ -53,9 +57,9 @@ class AddTxnCount(beam.DoFn):
 
     def process(self, element, txn_state=beam.DoFn.StateParam(TXN_STATE),
                          timer=beam.DoFn.TimerParam(CLEANUP_TIMER)):
-        user_id, payload = element
+        user_id, event = element
         try:
-            ts = int(datetime.fromisoformat(payload["timestamp"]).timestamp())
+            ts = int(datetime.fromisoformat(event["timestamp"]).timestamp())
         except Exception:
             return
         txn_state.add(ts)
@@ -64,8 +68,8 @@ class AddTxnCount(beam.DoFn):
         txn_state.clear()
         for t in recent:
             txn_state.add(t)
-        payload["txn_count_last_10min"] = len(recent)
-        yield payload
+        event["txn_count_last_10min"] = len(recent)
+        yield event
 
     @on_timer(CLEANUP_TIMER)
     def on_cleanup(self, txn_state=beam.DoFn.StateParam(TXN_STATE)):
@@ -76,18 +80,19 @@ class AddTxnCount(beam.DoFn):
             txn_state.add(t)
 
 # --- Fraud scoring ---
-def score_event(payload: dict) -> typing.Optional[dict]:
+def score_event(event: dict) -> typing.Optional[dict]:
     try:
-        timestamp = datetime.fromisoformat(payload["timestamp"])
-        X = pd.DataFrame([{ 
-            "amount": payload["amount"],
-            "currency": le_currency.transform([payload["currency"]])[0] if payload["currency"] in le_currency.classes_ else -1,
-            "country": le_country.transform([payload["country"]])[0] if payload["country"] in le_country.classes_ else -1,
-            "ip_country": le_ip_country.transform([payload["ip_country"]])[0] if payload["ip_country"] in le_ip_country.classes_ else -1,
-            "device": le_device.transform([payload["device"]])[0] if payload["device"] in le_device.classes_ else -1,
+        timestamp = datetime.fromisoformat(event["timestamp"])
+        X = pd.DataFrame([{
+            "amount": event["amount"],
+            "currency": safe_encode(le_currency, event["currency"]),
+            "country": safe_encode(le_country, event["country"]),
+            "ip_country": safe_encode(le_ip_country, event["ip_country"]),
+            "device": safe_encode(le_device, event["device"]),
             "hour": timestamp.hour,
-            "txn_count_last_10min": payload.get("txn_count_last_10min", 0)
+            "txn_count_last_10min": event["txn_count_last_10min"]
         }])
+        
         risk_score = model.predict_proba(X[feature_order])[0][1]
         fraud_label = int(risk_score > 0.5)
         risk_level = (
@@ -98,7 +103,7 @@ def score_event(payload: dict) -> typing.Optional[dict]:
             "low" if risk_score > 0.1 else
             "minimal"
         )
-        return get_enriched_payload(payload, risk_score, fraud_label, risk_level)
+        return get_enriched_event(event, risk_score, fraud_label, risk_level)
     except Exception as e:
         print("❌ Scoring error:", e)
         return None
@@ -120,28 +125,28 @@ def run():
             | "AddTxnCount" >> beam.ParDo(AddTxnCount())
             | "ScoreEvent" >> beam.Map(score_event)
             | "FilterNone" >> beam.Filter(lambda x: x is not None)
-            #| "PrintOutput" >> beam.Map(print) NOT FRO PRODUCTION
-            | "WriteToBigQuery" >> beam.io.WriteToBigQuery(
-                table="your_project.your_dataset.fraud_scored_events",
-                schema={
-                    "fields": [
-                        {"name": "user_id", "type": "STRING"},
-                        {"name": "event_time", "type": "TIMESTAMP"},
-                        {"name": "amount", "type": "FLOAT"},
-                        {"name": "currency", "type": "STRING"},
-                        {"name": "country", "type": "STRING"},
-                        {"name": "ip_country", "type": "STRING"},
-                        {"name": "device", "type": "STRING"},
-                        {"name": "hour", "type": "INTEGER"},
-                        {"name": "txn_count_last_10min", "type": "INTEGER"},
-                        {"name": "fraud_score", "type": "FLOAT"},
-                        {"name": "fraud_label", "type": "INTEGER"},
-                        {"name": "risk_level", "type": "STRING"}
-                    ]
-                },
-                write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
-                create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED
-            )
+            | "PrintOutput" >> beam.Map(print) #NOT FRO PRODUCTION
+            # | "WriteToBigQuery" >> beam.io.WriteToBigQuery(
+            #     table="your_project.your_dataset.fraud_scored_events",
+            #     schema={
+            #         "fields": [
+            #             {"name": "user_id", "type": "STRING"},
+            #             {"name": "event_time", "type": "TIMESTAMP"},
+            #             {"name": "amount", "type": "FLOAT"},
+            #             {"name": "currency", "type": "STRING"},
+            #             {"name": "country", "type": "STRING"},
+            #             {"name": "ip_country", "type": "STRING"},
+            #             {"name": "device", "type": "STRING"},
+            #             {"name": "hour", "type": "INTEGER"},
+            #             {"name": "txn_count_last_10min", "type": "INTEGER"},
+            #             {"name": "fraud_score", "type": "FLOAT"},
+            #             {"name": "fraud_label", "type": "INTEGER"},
+            #             {"name": "risk_level", "type": "STRING"}
+            #         ]
+            #     },
+            #     write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
+            #     create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED
+            # )
         )
 
 if __name__ == "__main__":
