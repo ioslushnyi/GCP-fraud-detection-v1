@@ -1,5 +1,3 @@
-# main_pipeline.py
-
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions
 from apache_beam.coders import VarIntCoder
@@ -23,8 +21,7 @@ le_ip_country = joblib.load("ml-model/le_ip_country_v3.pkl")
 le_device = joblib.load("ml-model/le_device_v3.pkl")
 feature_order = joblib.load("ml-model/feature_order_v3.pkl")
 
-# --- Helper: safe encoding ---
-# This function encodes categorical values using pre-fitted LabelEncoders.
+
 def safe_encode(encoder, value):
     return encoder.transform([value])[0] if value in encoder.classes_ else -1
 
@@ -32,17 +29,14 @@ def safe_decode(m):
     try:
         return json.loads(m.decode("utf-8"))
     except Exception as e:
-        print("❌ Decode error:", e)
+        print("\u274c Decode error:", e)
         return None
 
-# --- Parse command line arguments ---
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--runner', default='DirectRunner')
-    #parser.add_argument('--env', default='local', choices=['local', 'production'])
+    parser.add_argument('--runner', default='DirectRunner', choices=['DirectRunner', 'DataflowRunner'])
     return parser.parse_args()
 
-# --- Helper: build enriched output ---
 def get_enriched_event(event: dict, risk_score: float, fraud_label: int, risk_level: str) -> dict:
     event_time = event["timestamp"]
     if not event_time.endswith("Z"):
@@ -62,7 +56,6 @@ def get_enriched_event(event: dict, risk_score: float, fraud_label: int, risk_le
         "risk_level": risk_level
     }
 
-# --- User state tracker ---
 class AddTxnCount(beam.DoFn):
     TXN_STATE = BagStateSpec('txn_timestamps', VarIntCoder())
     CLEANUP_TIMER = TimerSpec('cleanup', TimeDomain.WATERMARK)
@@ -75,7 +68,6 @@ class AddTxnCount(beam.DoFn):
         except Exception:
             return
         txn_state.add(ts)
-        #timer.set(datetime.fromtimestamp(ts + 600))
         timer.set(datetime.fromtimestamp(ts + 600, tz=timezone.utc))
         recent = [t for t in txn_state.read() if t >= ts - 600]
         txn_state.clear()
@@ -92,7 +84,6 @@ class AddTxnCount(beam.DoFn):
         for t in recent:
             txn_state.add(t)
 
-# --- Fraud scoring ---
 def score_event(event: dict) -> typing.Optional[dict]:
     try:
         timestamp = datetime.fromisoformat(event["timestamp"])
@@ -105,7 +96,6 @@ def score_event(event: dict) -> typing.Optional[dict]:
             "hour": timestamp.hour,
             "txn_count_last_10min": event["txn_count_last_10min"]
         }])
-        
         risk_score = model.predict_proba(X[feature_order])[0][1]
         fraud_label = int(risk_score > 0.5)
         risk_level = (
@@ -118,23 +108,26 @@ def score_event(event: dict) -> typing.Optional[dict]:
         )
         return get_enriched_event(event, risk_score, fraud_label, risk_level)
     except Exception as e:
-        print("❌ Scoring error:", e)
+        print("\u274c Scoring error:", e)
         return None
 
-# --- Main runner ---
 def run():
     args = parse_args()
 
-    options = PipelineOptions([
-        "--project=fraud-detection-v1",
-        "--region=us-central1",
-        "--runner=DataflowRunner",
-        "--temp_location=gs://fraud-detection-temp-bucket/temp",
-        "--staging_location=gs://fraud-detection-temp-bucket/staging",
-        "--streaming"
-    ])
-    #options.view_as(StandardOptions).runner = args.runner
-    #options.view_as(StandardOptions).streaming = True
+    runner_opts = []
+    if args.runner == "DataflowRunner":
+        runner_opts = [
+            "--runner=DataflowRunner",
+            "--project=fraud-detection-v1",
+            "--region=us-central1",
+            "--temp_location=gs://fraud-detection-temp-bucket/temp",
+            "--staging_location=gs://fraud-detection-temp-bucket/staging",
+            "--streaming"
+        ]
+
+    options = PipelineOptions(runner_opts)
+    options.view_as(StandardOptions).runner = args.runner
+    options.view_as(StandardOptions).streaming = True
 
     with beam.Pipeline(options=options) as p:
         (
@@ -146,25 +139,10 @@ def run():
             | "AddTxnCount" >> beam.ParDo(AddTxnCount())
             | "ScoreEvent" >> beam.Map(score_event)
             | "FilterNone" >> beam.Filter(lambda x: x is not None)
-            | "PrintOutput" >> beam.Map(print) #NOT FRO PRODUCTION
+            | "PrintOutput" >> beam.Map(print)
             | "WriteToBigQuery" >> beam.io.WriteToBigQuery(
                 table="fraud-detection-v1.realtime_analytics.fraud_scored_events",
-                schema={
-                    "fields": [
-                        {"name": "user_id", "type": "STRING"},
-                        {"name": "event_time", "type": "TIMESTAMP"},
-                        {"name": "amount", "type": "FLOAT"},
-                        {"name": "currency", "type": "STRING"},
-                        {"name": "country", "type": "STRING"},
-                        {"name": "ip_country", "type": "STRING"},
-                        {"name": "device", "type": "STRING"},
-                        {"name": "hour", "type": "INTEGER"},
-                        {"name": "txn_count_last_10min", "type": "INTEGER"},
-                        {"name": "fraud_score", "type": "FLOAT"},
-                        {"name": "fraud_label", "type": "INTEGER"},
-                        {"name": "risk_level", "type": "STRING"}
-                    ]
-                },
+                schema="auto",
                 write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
                 create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED
             )
