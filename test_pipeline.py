@@ -50,14 +50,18 @@ def score_event(event):
         def safe_encode(encoder, value):
             return encoder.transform([value])[0] if value in encoder.classes_ else -1
 
+        # Enrich event before scoring
+        event["hour"] = event["timestamp"].hour
+        event["txn_count_last_10min"] = 5
+
         df = pd.DataFrame([{
             "amount": event["amount"],
             "currency": safe_encode(le_currency, event["currency"]),
             "country": safe_encode(le_country, event["country"]),
             "ip_country": safe_encode(le_ip_country, event["ip_country"]),
             "device": safe_encode(le_device, event["device"]),
-            "hour": event["timestamp"].hour,
-            "txn_count_last_10min": 5  # Placeholder for now
+            "hour": event["hour"],
+            "txn_count_last_10min": event["txn_count_last_10min"]
         }])
 
         risk_score = model.predict_proba(df[feature_order])[0][1]
