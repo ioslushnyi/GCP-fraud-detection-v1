@@ -13,14 +13,23 @@ import time
 import argparse
 from typing import Tuple
 import logging
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # gets path to beam-pipeline/
+MODEL_PATH = os.path.join(BASE_DIR, "../ml-model/fraud_model.pkl")
+LE_CURRENCY_PATH = os.path.join(BASE_DIR, "../ml-model/le_currency.pkl")
+LE_COUNTRY_PATH = os.path.join(BASE_DIR, "../ml-model/le_country.pkl")
+LE_IP_COUNTRY_PATH = os.path.join(BASE_DIR, "../ml-model/le_ip_country.pkl")
+LE_DEVICE_PATH = os.path.join(BASE_DIR, "../ml-model/le_device.pkl")
+FEATURE_ORDER_PATH = os.path.join(BASE_DIR, "../ml-model/feature_order.pkl")
 
 # --- Load model and encoders globally ---
-model = joblib.load("../ml-model/fraud_model.pkl")
-le_currency = joblib.load("../ml-model/le_currency.pkl")
-le_country = joblib.load("../ml-model/le_country.pkl")
-le_ip_country = joblib.load("../ml-model/le_ip_country.pkl")
-le_device = joblib.load("../ml-model/le_device.pkl")
-feature_order = joblib.load("../ml-model/feature_order.pkl")
+model = joblib.load(MODEL_PATH)
+le_currency = joblib.load(LE_CURRENCY_PATH)
+le_country = joblib.load(LE_COUNTRY_PATH)
+le_ip_country = joblib.load(LE_IP_COUNTRY_PATH)
+le_device = joblib.load(LE_DEVICE_PATH)
+feature_order = joblib.load(FEATURE_ORDER_PATH)
 
 # --- Helper: safe encoding ---
 # This function encodes categorical values using pre-fitted LabelEncoders.
@@ -153,7 +162,7 @@ def run():
     with beam.Pipeline(options=options) as p:
         (
             p
-            | "ReadFromPubSub" >> beam.io.ReadFromPubSub(subscription="projects/fraud-detection-v1/subscriptions/test-sub")
+            | "ReadFromPubSub" >> beam.io.ReadFromPubSub(subscription="projects/fraud-detection-v1/subscriptions/payment-events-sub")
             | "DecodePubSub" >> beam.Map(safe_decode)
             | "FilterValid" >> beam.Filter(lambda x: x is not None)
             | "KeyByUser" >> beam.Map(lambda x: (x["user_id"], x)).with_output_types(Tuple[str, dict])
