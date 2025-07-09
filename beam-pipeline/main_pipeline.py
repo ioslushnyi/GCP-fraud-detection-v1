@@ -57,7 +57,7 @@ def parse_args():
 def get_enriched_event(event: dict, risk_score: float, fraud_label: int, risk_level: str) -> dict:
     return {
         "user_id": str(event["user_id"]),
-        "event_time": datetime.fromisoformat(event["timestamp"]).replace(microsecond=0).isoformat() + "Z",
+        "event_time": event["timestamp"],
         "amount": float(event["amount"]),  # cast
         "currency": str(event["currency"]),
         "country": str(event["country"]),

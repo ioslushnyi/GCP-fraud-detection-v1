@@ -8,10 +8,10 @@ BQ_TABLE="fraud_scored_events"
 CLOUD_RUN_METRICS_URL="https://your-cloud-run-url.a.run.app/metrics"
 
 # Replace these with real values or export as env vars before running
-INFLUX_URL="https://your-influxdb-host:8086/api/v2/write"
-INFLUX_TOKEN="your-influx-token"
-INFLUX_ORG="your-org"
-INFLUX_BUCKET="your-bucket"
+INFLUX_URL="https://us-east-1-1.aws.cloud2.influxdata.com"
+INFLUX_TOKEN="yF-_fav36bKpAqH2V6eqVJE5YBy8tqjI-v2I4aVokFYIz94yDuqmyJ1sYziQNYc-kceOsNZ8C-ssxlTtkai2-Q=="
+INFLUX_ORG="fraud-detection"
+INFLUX_BUCKET="fraud-metrics"
 
 # ─── TOPICS ────────────────────────────────────────────────────
 

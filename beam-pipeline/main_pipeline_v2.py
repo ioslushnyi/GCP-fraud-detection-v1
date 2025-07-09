@@ -14,6 +14,7 @@ import argparse
 from typing import Tuple
 import logging
 import os
+from google.cloud import pubsub_v1
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # gets path to beam-pipeline/
 MODEL_PATH = os.path.join(BASE_DIR, "../ml-model/fraud_model.pkl")
@@ -57,7 +58,7 @@ def parse_args():
 def get_enriched_event(event: dict, risk_score: float, fraud_label: int, risk_level: str) -> dict:
     return {
         "user_id": str(event["user_id"]),
-        "event_time": datetime.fromisoformat(event["timestamp"]).replace(microsecond=0).isoformat() + "Z",
+        "event_time": event["timestamp"], # "event_time": datetime.fromisoformat(event["timestamp"]).replace(microsecond=0).isoformat() + "Z",
         "amount": float(event["amount"]),  # cast
         "currency": str(event["currency"]),
         "country": str(event["country"]),
@@ -132,6 +133,28 @@ def score_event(event: dict) -> typing.Optional[dict]:
         print("\u274c Scoring error:", e)
         return None
 
+class PublishMetricsToPubSub(beam.DoFn):
+    def __init__(self, topic_path):
+        self.topic_path = topic_path
+        self.publisher = None
+
+    def setup(self):
+        self.publisher = pubsub_v1.PublisherClient()
+
+    def process(self, event):
+        payload = {
+            "user_id": event["user_id"],
+            "timestamp": event["event_time"],
+            "fraud_score": event["fraud_score"],
+            "risk_level": event["risk_level"]
+        }
+        data = json.dumps(payload).encode("utf-8")
+        try:
+            self.publisher.publish(self.topic_path, data=data)
+        except Exception as e:
+            logging.error(f"❌ Failed to publish message: {e}")
+        yield event  # Continue downstream
+
 # --- Beam DoFn to log rows ---
 # This function logs each row processed in the pipeline for debugging purposes.
 class LogRow(beam.DoFn):
@@ -170,6 +193,7 @@ def run():
             | "ScoreEvent" >> beam.Map(score_event)
             | "FilterNone" >> beam.Filter(lambda x: x is not None)
             | "LogRow" >> beam.ParDo(LogRow())
+            | "PublishMetrics" >> beam.ParDo(PublishMetricsToPubSub("projects/fraud-detection-v1/topics/scored-events-fraud-metrics"))
             | "WriteToBigQuery" >> beam.io.WriteToBigQuery(
                 table="fraud-detection-v1.realtime_analytics.fraud_scored_events",
                 schema={
