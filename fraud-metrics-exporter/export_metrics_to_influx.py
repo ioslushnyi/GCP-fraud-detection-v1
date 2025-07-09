@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+import uvicorn
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 import base64
 import os
 import json
 from dotenv import load_dotenv
 import time
-
 
 load_dotenv()
 
@@ -23,6 +23,10 @@ write_api = client.write_api()
 # Retry settings
 MAX_RETRIES = 3
 INITIAL_BACKOFF = 0.2  # seconds
+
+@app.get("/")
+def health_check():
+    return {"status": "ok"}
 
 @app.post("/metrics-api/push")
 async def pubsub_push_handler(request: Request):
@@ -68,3 +72,7 @@ async def pubsub_push_handler(request: Request):
     except Exception as e:
         print(f"❌ Unhandled error: {e}")
         return JSONResponse(content={"error": "Internal server error"}, status_code=500)
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))  # Required by Cloud Run
+    uvicorn.run("export_metrics_to_influx:app", host="0.0.0.0", port=port)
