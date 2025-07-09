@@ -6,7 +6,9 @@ import base64
 import os
 import json
 from dotenv import load_dotenv
+from datetime import datetime
 import time
+
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -48,19 +50,33 @@ async def pubsub_push_handler(request: Request):
         except json.JSONDecodeError:
             return JSONResponse(content={"error": "Invalid JSON in message data"}, status_code=400)
 
-        # Influx write
+        iso_time = event.get("event_time")  # e.g. "2025-07-08T12:34:56Z"
+        try:
+            # Replace 'Z' with '+00:00' to make it UTC-aware for Python
+            if iso_time.endswith("Z"):
+                iso_time = iso_time.replace("Z", "+00:00")
+            # Parse and convert to nanoseconds - required by InfluxDB
+            # Note: InfluxDB expects timestamps in nanoseconds
+            parsed_time = datetime.fromisoformat(iso_time)
+            ns_timestamp = int(parsed_time.timestamp() * 1e9)  # nanoseconds
+            logging.info(f"⏰ Parsed event time: {parsed_time} (ns: {ns_timestamp})")
+        except Exception:
+            ns_timestamp = time.time_ns() # Fallback to current time in nanoseconds
+            logging.warning("⚠️ Invalid event_time format, using current time instead")
+
         point = (
             Point("fraud_events")
             .tag("user_id", str(event.get("user_id", "unknown")))
             .field("risk_level", str(event.get("risk_level", 0)))
             .field("fraud_score", float(event.get("fraud_score", 0)))
-            .time(event.get("event_time"), WritePrecision.NS)
+            .time(ns_timestamp, WritePrecision.NS)
         )
 
-    # Retry on failure with exponential backoff
+        # Retry on failure with exponential backoff
         for attempt in range(MAX_RETRIES):
             try:
                 write_api.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=point)
+                logging.info(f"✅ Influx write successful for user_id: {event.get('user_id')}")
                 break  # success, exit retry loop
             except Exception as e:
                 wait = INITIAL_BACKOFF * (2 ** attempt)
