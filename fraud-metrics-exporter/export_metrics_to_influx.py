@@ -7,6 +7,9 @@ import os
 import json
 from dotenv import load_dotenv
 import time
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 
@@ -41,7 +44,7 @@ async def pubsub_push_handler(request: Request):
         data_bytes = base64.b64decode(pubsub_message["data"])
         try:
             event = json.loads(data_bytes)
-            print("📩 Received event:", event)
+            logging.info(f"📩 Received event: {event}")
         except json.JSONDecodeError:
             return JSONResponse(content={"error": "Invalid JSON in message data"}, status_code=400)
 
@@ -61,16 +64,16 @@ async def pubsub_push_handler(request: Request):
                 break  # success, exit retry loop
             except Exception as e:
                 wait = INITIAL_BACKOFF * (2 ** attempt)
-                print(f"⚠️ Influx write failed (attempt {attempt + 1}): {e} — retrying in {wait:.1f}s")
+                logging.warning(f"⚠️ Influx write failed (attempt {attempt + 1}): {e} — retrying in {wait:.1f}s")
                 time.sleep(wait)
         else:
-            print("❌ All Influx retries failed")
+            logging.error("❌ All Influx retries failed")
             return JSONResponse(content={"error": "InfluxDB write failed after retries"}, status_code=500)
 
         return JSONResponse(content={"status": "OK"})
 
     except Exception as e:
-        print(f"❌ Unhandled error: {e}")
+        logging.error(f"❌ Unhandled error: {e}")
         return JSONResponse(content={"error": "Internal server error"}, status_code=500)
 
 if __name__ == "__main__":
