@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import uvicorn
 from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
 import base64
 import os
 import json
@@ -24,6 +25,8 @@ INFLUX_BUCKET = os.getenv("INFLUXDB_BUCKET")
 
 client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
 write_api = client.write_api()
+#write_api = client.write_api(write_options=SYNCHRONOUS)
+#write_api = client.write_api(write_options=SYNCHRONOUS, debug=True)
 
 # Retry settings
 MAX_RETRIES = 3
@@ -50,9 +53,8 @@ async def pubsub_push_handler(request: Request):
         except json.JSONDecodeError:
             return JSONResponse(content={"error": "Invalid JSON in message data"}, status_code=400)
 
-        #iso_time = event.get("event_time") 
-        logging.info(f"⏰ event.get('event_time'): {event.get("event_time")}")
-        iso_time = '2025-07-09T18:18:51.211239'
+        iso_time = event.get("event_time") 
+
         try:
             # Replace 'Z' with '+00:00' to make it UTC-aware for Python
             if iso_time.endswith("Z"):
@@ -64,12 +66,28 @@ async def pubsub_push_handler(request: Request):
             logging.info(f"⏰ Parsed event time: {parsed_time} (ns: {ns_timestamp})")
         except Exception:
             ns_timestamp = time.time_ns() # Fallback to current time in nanoseconds
+            #TODO FIX THE INVALID DATA FORMAT ISSUE
             logging.warning("⚠️ Invalid event_time format, using current time instead")
 
+        # point = (
+        #     Point("fraud_events_v2")
+        #     .tag("user_id", str(event.get("user_id", "unknown")))
+        #     .field("risk_level", str(event.get("risk_level", 0)))
+        #     .field("fraud_score", str(event.get("fraud_score", 0)))
+        #     .time(1752085131211200949, WritePrecision.NS)
+        # )
+        
+        # point = (
+        #     Point("fraud_events")
+        #     .tag("user_id", "test-user-beam")
+        #     .field("fraud_score", 0.99)
+        #     .field("risk_level", "critical")
+        #     .time(ns_timestamp, WritePrecision.NS)
+        # )
         point = (
             Point("fraud_events")
             .tag("user_id", str(event.get("user_id", "unknown")))
-            .field("risk_level", str(event.get("risk_level", 0)))
+            .field("risk_level", str(event.get("risk_level", "unknown")))
             .field("fraud_score", float(event.get("fraud_score", 0)))
             .time(ns_timestamp, WritePrecision.NS)
         )
@@ -77,7 +95,7 @@ async def pubsub_push_handler(request: Request):
         # Retry on failure with exponential backoff
         for attempt in range(MAX_RETRIES):
             try:
-                write_api.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=point)
+                write_api.write(bucket=INFLUX_BUCKET, record=point)
                 logging.info(f"✅ Influx write successful for user_id: {event.get('user_id')}")
                 break  # success, exit retry loop
             except Exception as e:

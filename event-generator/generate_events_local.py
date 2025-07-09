@@ -17,7 +17,7 @@ topic_path = publisher.topic_path(project_id, topic_id)
 def generate_fake_event():
     return {
         "user_id": str(uuid.uuid4()),
-        "amount": round(random.uniform(10, 13000), 2),
+        "amount": round(random.uniform(10, 12000), 2),
         "currency": random.choice(["USD", "EUR", "PLN", "GBP", "UAH"]),
         "country": random.choice(["PL", "UA"]) if random.random() > 0.1 else fake.country_code(),
         "ip_country": random.choice(["PL", "UA"]) if random.random() > 0.1 else fake.country_code(),
@@ -35,10 +35,11 @@ while True:
         event = generate_fake_event()
 
         print(f"Event: {event}")
+        
         # random burst of events for the same user (10% chance)
         if (random.random() < 0.2 ):
             user_id = event["user_id"]
-            for _ in range(random.randrange(5,10)):
+            for _ in range(random.randrange(3,7)):
                 burst_event = generate_fake_event()
                 burst_event["user_id"] = user_id
                 print(f"Event sequence: {burst_event}")

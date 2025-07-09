@@ -16,7 +16,7 @@ client = InfluxDBClient(
 
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
-iso_time = '2025-07-09T18:18:51.211238'
+iso_time = '2025-07-09T18:18:51.211255'
 # Replace 'Z' with '+00:00' to make it UTC-aware for Python
 if iso_time.endswith("Z"):
     iso_time = iso_time.replace("Z", "+00:00")
