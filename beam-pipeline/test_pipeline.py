@@ -6,12 +6,12 @@ import pandas as pd
 import joblib
 
 # --- Load model and encoders locally ---
-model = joblib.load("ml-model/fraud_model_v3.pkl")
-le_currency = joblib.load("ml-model/le_currency_v3.pkl")
-le_country = joblib.load("ml-model/le_country_v3.pkl")
-le_ip_country = joblib.load("ml-model/le_ip_country_v3.pkl")
-le_device = joblib.load("ml-model/le_device_v3.pkl")
-feature_order = joblib.load("ml-model/feature_order_v3.pkl")
+model = joblib.load("../ml-model/fraud_model.pkl")
+le_currency = joblib.load("../ml-model/le_currency.pkl")
+le_country = joblib.load("../ml-model/le_country.pkl")
+le_ip_country = joblib.load("../ml-model/le_ip_country.pkl")
+le_device = joblib.load("../ml-model/le_device.pkl")
+feature_order = joblib.load("../ml-model/feature_order.pkl")
 
 # --- Dummy input events for local testing ---
 FAKE_EVENTS = [
