@@ -50,7 +50,9 @@ async def pubsub_push_handler(request: Request):
         except json.JSONDecodeError:
             return JSONResponse(content={"error": "Invalid JSON in message data"}, status_code=400)
 
-        iso_time = event.get("event_time")  # e.g. "2025-07-08T12:34:56Z"
+        #iso_time = event.get("event_time") 
+        logging.info(f"⏰ event.get('event_time'): {event.get("event_time")}")
+        iso_time = '2025-07-09T18:18:51.211239'
         try:
             # Replace 'Z' with '+00:00' to make it UTC-aware for Python
             if iso_time.endswith("Z"):
