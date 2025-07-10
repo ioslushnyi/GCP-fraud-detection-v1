@@ -83,6 +83,8 @@ class AddTxnCount(beam.DoFn):
         try:
             ts = int(datetime.fromisoformat(event["timestamp"]).timestamp())
         except Exception:
+            ts = int(datetime.now().timestamp())
+            logging.warning(f"⚠️ Invalid event_time format ({event["timestamp"]}), using current time instead")
             return
         txn_state.add(ts)
         timer.set(datetime.fromtimestamp(ts + 600, tz=timezone.utc))
@@ -144,7 +146,7 @@ class PublishMetricsToPubSub(beam.DoFn):
     def process(self, event):
         payload = {
             "user_id": event["user_id"],
-            "timestamp": event["event_time"],
+            "event_time": event["event_time"],
             "fraud_score": event["fraud_score"],
             "risk_level": event["risk_level"]
         }

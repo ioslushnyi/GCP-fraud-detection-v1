@@ -22,7 +22,7 @@ def generate_fake_event():
         "country": random.choice(["PL", "UA"]) if random.random() > 0.1 else fake.country_code(),
         "ip_country": random.choice(["PL", "UA"]) if random.random() > 0.1 else fake.country_code(),
         "device": random.choice(["iPhone", "Android", "Windows", "Linux", "Mac"]),
-        "timestamp": datetime.now().isoformat()
+        "event_time": datetime.now().isoformat()
     }
 
 def publish_event(event):
@@ -30,7 +30,11 @@ def publish_event(event):
     future = publisher.publish(topic_path, data=event_data)
     print(f"Published message ID: {future.result()}")
 
-while True:
+event = generate_fake_event()
+print(f"Event: {event}")
+publish_event(event)
+
+while False:
     try:
         event = generate_fake_event()
 
