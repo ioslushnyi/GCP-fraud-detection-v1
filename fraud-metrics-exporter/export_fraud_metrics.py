@@ -25,8 +25,6 @@ INFLUX_BUCKET = os.getenv("INFLUXDB_BUCKET")
 
 client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
 write_api = client.write_api()
-#write_api = client.write_api(write_options=SYNCHRONOUS)
-#write_api = client.write_api(write_options=SYNCHRONOUS, debug=True)
 
 # Retry settings
 MAX_RETRIES = 3
@@ -54,11 +52,7 @@ async def pubsub_push_handler(request: Request):
             return JSONResponse(content={"error": "Invalid JSON in message data"}, status_code=400)
 
         iso_time = event.get("event_time") 
-
         try:
-            # Replace 'Z' with '+00:00' to make it UTC-aware for Python
-            if iso_time.endswith("Z"):
-                iso_time = iso_time.replace("Z", "+00:00")
             # Parse and convert to nanoseconds - required by InfluxDB
             # Note: InfluxDB expects timestamps in nanoseconds
             parsed_time = datetime.fromisoformat(iso_time)
@@ -66,24 +60,8 @@ async def pubsub_push_handler(request: Request):
             logging.info(f"⏰ Parsed event time: {parsed_time} (ns: {ns_timestamp})")
         except Exception:
             ns_timestamp = time.time_ns() # Fallback to current time in nanoseconds
-            #TODO FIX THE INVALID DATA FORMAT ISSUE
             logging.warning("⚠️ Invalid event_time format, using current time instead")
 
-        # point = (
-        #     Point("fraud_events_v2")
-        #     .tag("user_id", str(event.get("user_id", "unknown")))
-        #     .field("risk_level", str(event.get("risk_level", 0)))
-        #     .field("fraud_score", str(event.get("fraud_score", 0)))
-        #     .time(1752085131211200949, WritePrecision.NS)
-        # )
-        
-        # point = (
-        #     Point("fraud_events")
-        #     .tag("user_id", "test-user-beam")
-        #     .field("fraud_score", 0.99)
-        #     .field("risk_level", "critical")
-        #     .time(ns_timestamp, WritePrecision.NS)
-        # )
         point = (
             Point("fraud_events")
             .tag("user_id", str(event.get("user_id", "unknown")))
@@ -114,4 +92,4 @@ async def pubsub_push_handler(request: Request):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))  # Required by Cloud Run
-    uvicorn.run("export_metrics_to_influx:app", host="0.0.0.0", port=port)
+    uvicorn.run("export_fraud_metrics:app", host="0.0.0.0", port=port)
