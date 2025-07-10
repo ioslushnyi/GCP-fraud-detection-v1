@@ -110,8 +110,7 @@ def score_event(event: dict) -> typing.Optional[dict]:
         return  (
             "critical" if risk_score > 0.9 else
             "high" if risk_score > 0.7 else
-            "medium-high" if risk_score > 0.5 else
-            "medium" if risk_score > 0.3 else
+            "medium" if risk_score > 0.5 else
             "low" if risk_score > 0.1 else
             "minimal"
         )

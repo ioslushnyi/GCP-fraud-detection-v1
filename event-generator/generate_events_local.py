@@ -17,7 +17,7 @@ topic_path = publisher.topic_path(project_id, topic_id)
 def generate_fake_event():
     return {
         "user_id": str(uuid.uuid4()),
-        "amount": round(random.uniform(10, 8080), 2),
+        "amount": round(random.uniform(10, 12000), 2),
         "currency": random.choice(["USD", "EUR", "PLN", "GBP", "UAH"]),
         "country": random.choice(["PL", "UA"]) if random.random() > 0.1 else fake.country_code(),
         "ip_country": random.choice(["PL", "UA"]) if random.random() > 0.1 else fake.country_code(),
@@ -30,18 +30,18 @@ def publish_event(event):
     future = publisher.publish(topic_path, data=event_data)
     print(f"Published message ID: {future.result()}")
 
-event = generate_fake_event()
-print(f"Event: {event}")
-publish_event(event)
+# event = generate_fake_event()
+# print(f"Event: {event}")
+# publish_event(event)
 
-while False:
+while True:
     try:
         event = generate_fake_event()
 
         print(f"Event: {event}")
         
         # random burst of events for the same user (10% chance)
-        if (random.random() < 0.2 ):
+        if (random.random() < 0.1 ):
             user_id = event["user_id"]
             for _ in range(random.randrange(3,7)):
                 burst_event = generate_fake_event()
@@ -56,4 +56,4 @@ while False:
     except Exception as e:
         print(f"Error publishing event: {e}")
     # Wait for a while before publishing the next event
-    time.sleep(random.uniform(0.1, 5))  # Adjust the sleep time as needed
+    time.sleep(random.uniform(1, 5))  # Adjust the sleep time as needed
