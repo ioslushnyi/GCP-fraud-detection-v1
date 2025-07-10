@@ -1,6 +1,6 @@
 import joblib
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Load model and pre-fitted encoders (these should be saved during training)
 model = joblib.load("fraud_model_v3.pkl")
@@ -14,7 +14,7 @@ feature_order = joblib.load("feature_order_v3.pkl")
 # Simulated incoming event
 custom_event = {
     "user_id": "user_2",
-    "timestamp": datetime.now(),
+    "timestamp": datetime.now(timezone.utc),
     "amount": 9999.0,
     "currency": "EUR",
     "country": "PL",

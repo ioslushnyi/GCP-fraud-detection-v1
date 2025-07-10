@@ -7,4 +7,4 @@ COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["uvicorn", "export_metrics_to_influx:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "export_fraud_metrics:app", "--host", "0.0.0.0", "--port", "8080"]

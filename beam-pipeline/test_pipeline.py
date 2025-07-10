@@ -1,6 +1,6 @@
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import pandas as pd
 import joblib
@@ -17,7 +17,7 @@ feature_order = joblib.load("../ml-model/feature_order.pkl")
 FAKE_EVENTS = [
     {
         "user_id": "user_2",
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "amount": 9999.0,
         "currency": "EUR",
         "country": "PL",

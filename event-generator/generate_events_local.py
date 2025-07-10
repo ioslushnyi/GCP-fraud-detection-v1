@@ -1,7 +1,7 @@
 # Generate fake payment events and publish them to a Google Cloud Pub/Sub topic
 import time
 from google.cloud import pubsub_v1
-from datetime import datetime
+from datetime import datetime, timezone
 from faker import Faker
 import json
 import uuid
@@ -17,12 +17,12 @@ topic_path = publisher.topic_path(project_id, topic_id)
 def generate_fake_event():
     return {
         "user_id": str(uuid.uuid4()),
-        "amount": round(random.uniform(10, 12000), 2),
+        "amount": round(random.uniform(10, 8080), 2),
         "currency": random.choice(["USD", "EUR", "PLN", "GBP", "UAH"]),
         "country": random.choice(["PL", "UA"]) if random.random() > 0.1 else fake.country_code(),
         "ip_country": random.choice(["PL", "UA"]) if random.random() > 0.1 else fake.country_code(),
         "device": random.choice(["iPhone", "Android", "Windows", "Linux", "Mac"]),
-        "event_time": datetime.now().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 def publish_event(event):
