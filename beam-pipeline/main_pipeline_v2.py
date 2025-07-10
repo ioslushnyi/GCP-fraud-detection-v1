@@ -84,7 +84,7 @@ class AddTxnCount(beam.DoFn):
             ts = int(datetime.fromisoformat(event["timestamp"]).timestamp())
         except Exception:
             ts = int(datetime.now().timestamp())
-            logging.warning(f"⚠️ Invalid event_time format ({event["timestamp"]}), using current time instead")
+            logging.warning(f"⚠️ Invalid event_time format ({event["timestamp"]}), using current time instead.")
             return
         txn_state.add(ts)
         timer.set(datetime.fromtimestamp(ts + 600, tz=timezone.utc))
