@@ -64,7 +64,7 @@ def get_enriched_event(event: dict, risk_score: float, fraud_label: int, risk_le
         "country": str(event["country"]),
         "ip_country": str(event["ip_country"]),
         "device": str(event["device"]),
-        "hour": int(event.get("hour", 0)),
+        "hour": int(datetime.fromisoformat(event["timestamp"]).hour),
         "txn_count_last_10min": int(event.get("txn_count_last_10min", 0)),
         "fraud_score": float(risk_score),  # cast
         "fraud_label": int(fraud_label),   # cast

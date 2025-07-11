@@ -16,13 +16,13 @@ topic_path = publisher.topic_path(project_id, topic_id)
 # Generate a single fake payment event
 def generate_fake_event():
     # assume that 90% of users are from Poland or Ukraine
-    country = random.choice(["PL", "UA"]) if random.random() > 0.1 else fake.country_code()
+    country = random.choice(["PL", "UA"]) if random.random() > 0.1 else (random.choice(["DE", "CZ", "SK", "UK"]) if random.random() > 0.5 else fake.country_code())
     # and 10% use VPN, so we can generate random country code for them
     ip_country = country if random.random() > 0.1 else fake.country_code()
-    # users are making purchases starting from 100 to 12000
-    amount = round(random.uniform(100, 12000), 2)
-    # 90% of users use USD, EUR, PLN or UAH, 10% use other currencies
-    curreny = random.choice(["USD", "EUR", "PLN", "UAH"]) if random.random() > 0.1 else fake.currency_code()
+    # 95 of the users are making purchases between 100 and 12000 money units, 5% are making large purchases between 10000 and 20000 money units
+    amount = round(random.uniform(100, 10000), 2) if random.random() > 0.05 else round(random.uniform(10000, 15000), 2)
+    # 95% of users use USD, EUR, PLN or UAH, 5% use other currencies
+    curreny = random.choice(["USD", "EUR", "PLN", "UAH"]) if random.random() > 0.05 else fake.currency_code()
     return {
         "user_id": str(uuid.uuid4()),
         "amount": amount,
@@ -45,23 +45,18 @@ def publish_event(event):
 while True:
     try:
         event = generate_fake_event()
-
         print(f"Event: {event}")
-        
-        # random burst of events for the same user (10% chance)
-        if (random.random() < 0.1 ):
-            user_id = event["user_id"]
-            for _ in range(random.randrange(3,7)):
-                burst_event = generate_fake_event()
-                burst_event["user_id"] = user_id
-                print(f"Event sequence: {burst_event}")
-                publish_event(burst_event)
+        # random burst of events for the same user (5% chance)
+        if (random.random() <= 0.05 ):
+            print(f"Burst event sequence triggered for user {event['user_id']}")
+            for _ in range(random.randrange(5,8)):
+                publish_event(event)
             # Sleep for a short time to simulate burst
-                time.sleep(1)
+                time.sleep(3)
         else:
             publish_event(event)
 
     except Exception as e:
         print(f"Error publishing event: {e}")
     # Wait for a while before publishing the next event
-    time.sleep(random.uniform(1, 5))  # Adjust the sleep time as needed
+    time.sleep(random.uniform(5, 15))  # Adjust the sleep time as needed

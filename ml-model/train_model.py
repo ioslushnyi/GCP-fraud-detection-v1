@@ -26,7 +26,7 @@ REPEATED_USERS = [str(uuid.uuid4()) for _ in range(10)]  # Generate multiple rep
 # Mapping currencies to countries
 CURRENCY_COUNTRY_MAPPING = {
     "USD": ["US"],
-    "EUR": ["DE", "FR", "IT", "ES", "NL", "BE", "AT", "PT", "GR", "FI", "IE", "LU", "CY", "MT"],
+    "EUR": ["DE", "FR", "IT", "ES", "NL", "BE", "AT", "SK", "PT", "GR", "FI", "IE", "LU", "CY", "MT"],
     "PLN": ["PL"],
     "GBP": ["UK"],
     "UAH": ["UA"]
