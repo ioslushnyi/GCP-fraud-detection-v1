@@ -43,19 +43,20 @@ def generateuser_id():
 def generate_payment(user_id=None, base_time=None):
     if not user_id:
         user_id = generateuser_id()
-
     amount = round(random.uniform(5, 20000), 2)
-    currency = random.choice(["USD", "EUR", "PLN", "GBP", "UAH"])
-    country = CURRENCY_COUNTRY_MAPPING[currency][0] if random.random() > 0.1 else fake.country_code()
+    currency = random.choice(["USD", "EUR", "PLN", "UAH"]) if random.random() > 0.1 else fake.currency_code()
+    if currency in CURRENCY_COUNTRY_MAPPING:
+        country = random.choice(CURRENCY_COUNTRY_MAPPING[currency]) if random.random() > 0.1 else fake.country_code()
+    else:
+        country = fake.country_code()
     ip_country = country if random.random() > 0.1 else fake.country_code()
     device = random.choice(["iPhone", "Android", "Windows", "Linux", "Mac"])
     timestamp = base_time or fake.date_time_between(start_date="-30d", end_date="now")
-
     is_blacklisted = user_id in BLACKLISTED_USERS
     is_large_amount = amount > 10000
     is_suspicious_device = device in ["Windows", "Linux"]
     is_night_time = timestamp.hour < 5 or timestamp.hour > 23
-    is_country_currency_mismatch = country not in CURRENCY_COUNTRY_MAPPING[currency]
+    is_country_currency_mismatch = currency not in CURRENCY_COUNTRY_MAPPING or country not in CURRENCY_COUNTRY_MAPPING[currency]
 
     is_fraud = int(
         is_blacklisted

@@ -15,12 +15,20 @@ topic_path = publisher.topic_path(project_id, topic_id)
 
 # Generate a single fake payment event
 def generate_fake_event():
+    # assume that 90% of users are from Poland or Ukraine
+    country = random.choice(["PL", "UA"]) if random.random() > 0.1 else fake.country_code()
+    # and 10% use VPN, so we can generate random country code for them
+    ip_country = country if random.random() > 0.1 else fake.country_code()
+    # users are making purchases starting from 100 to 12000
+    amount = round(random.uniform(100, 12000), 2)
+    # 90% of users use USD, EUR, PLN or UAH, 10% use other currencies
+    curreny = random.choice(["USD", "EUR", "PLN", "UAH"]) if random.random() > 0.1 else fake.currency_code()
     return {
         "user_id": str(uuid.uuid4()),
-        "amount": round(random.uniform(10, 12000), 2),
-        "currency": random.choice(["USD", "EUR", "PLN", "GBP", "UAH"]),
-        "country": random.choice(["PL", "UA"]) if random.random() > 0.1 else fake.country_code(),
-        "ip_country": random.choice(["PL", "UA"]) if random.random() > 0.1 else fake.country_code(),
+        "amount": amount,
+        "currency": curreny,
+        "country": country,
+        "ip_country": ip_country,
         "device": random.choice(["iPhone", "Android", "Windows", "Linux", "Mac"]),
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
