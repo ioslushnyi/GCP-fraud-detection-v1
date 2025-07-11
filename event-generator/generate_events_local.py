@@ -20,7 +20,7 @@ def generate_fake_event():
     # and 10% use VPN, so we can generate random country code for them
     ip_country = country if random.random() > 0.1 else fake.country_code()
     # 95 of the users are making purchases between 100 and 12000 money units, 5% are making large purchases between 10000 and 20000 money units
-    amount = round(random.uniform(100, 10000), 2) if random.random() > 0.05 else round(random.uniform(10000, 15000), 2)
+    amount = round(random.uniform(100, 11000), 2) if random.random() > 0.1 else round(random.uniform(10000, 20000), 2)
     # 95% of users use USD, EUR, PLN or UAH, 5% use other currencies
     curreny = random.choice(["USD", "EUR", "PLN", "UAH"]) if random.random() > 0.05 else fake.currency_code()
     return {

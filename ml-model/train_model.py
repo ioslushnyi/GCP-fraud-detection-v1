@@ -62,7 +62,7 @@ def generate_payment(user_id=None, base_time=None):
         is_blacklisted
         or (is_large_amount and is_country_currency_mismatch and is_suspicious_device and is_night_time)
         or (is_large_amount and currency != "PLN" and is_country_currency_mismatch)
-        or (is_large_amount and is_night_time and is_suspicious_device and currency != "PLN")
+        or (is_large_amount and is_night_time and is_suspicious_device and is_country_currency_mismatch)
         or (country != ip_country and is_large_amount and currency != "PLN")
         or (country != ip_country and is_country_currency_mismatch and is_suspicious_device)
     ) if random.random() > 0.1 else 0  # Introduce some randomness in fraud labeling
