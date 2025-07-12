@@ -1,0 +1,5 @@
+apache-beam[gcp]
+pandas
+joblib
+google-cloud-pubsub
+typing-extensions

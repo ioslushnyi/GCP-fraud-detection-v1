@@ -1,0 +1,11 @@
+apache-beam[gcp]
+pandas
+joblib
+scikit-learn
+google-cloud-pubsub
+faker
+fastapi
+uvicorn
+influxdb-client
+python-dotenv
+typing-extensions

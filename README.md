@@ -48,3 +48,7 @@ Dashboard/Visualization: Looker Studio
 5. Visual presentation / Serving
 
 - Looker studio, dashboards
+
+## Setup
+
+pip install -r requirements.txt

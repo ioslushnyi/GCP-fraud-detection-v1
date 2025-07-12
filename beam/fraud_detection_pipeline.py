@@ -185,7 +185,8 @@ def run_pipeline():
             "--region=us-central1",
             "--temp_location=gs://fraud-detection-temp-bucket/temp",
             "--staging_location=gs://fraud-detection-temp-bucket/staging",
-            "--streaming"
+            "--streaming",
+            "--requirements_file=beam/requirements.txt"
         ]
 
     options = PipelineOptions(runner_opts)
