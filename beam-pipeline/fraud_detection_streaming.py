@@ -42,7 +42,7 @@ try:
     le_device = joblib.load(LE_DEVICE_PATH)
     feature_order = joblib.load(FEATURE_ORDER_PATH)
 except Exception as e:
-    logging.error(f"❌ Failed load ml model or encoders: {e}")
+    logging.error(f"Error loading model or encoders: {e}")
 
 # --- Utility functions ---
 # This function encodes categorical values using pre-fitted LabelEncoders.
@@ -53,7 +53,7 @@ def safe_decode(m):
     try:
         return json.loads(m.decode("utf-8"))
     except Exception as e:
-        logging.error(f"❌ Decode error: {e}")
+        logging.error(f"Decode error: {e}")
         return None
 # This function sets up argument parsing for the pipeline runner.
 def parse_args():
@@ -92,7 +92,7 @@ class AddTxnCount(beam.DoFn):
             ts = int(datetime.fromisoformat(event["timestamp"]).timestamp())
         except Exception:
             ts = int(datetime.now(timezone.utc).timestamp())
-            logging.warning(f"⚠️ Invalid event_time format ({event['timestamp']}), using current time instead.")
+            logging.warning(f"Invalid event_time format ({event['timestamp']}), using current time instead.")
             return
         txn_state.add(ts)
         timer.set(datetime.fromtimestamp(ts + 600, tz=timezone.utc))
@@ -139,7 +139,7 @@ def score_event(event: dict) -> typing.Optional[dict]:
 
         return get_enriched_event(event, risk_score, fraud_label, risk_level)
     except Exception as e:
-        logging.error(f"❌ Scoring error: {e}")
+        logging.error(f"Scoring error: {e}")
         return None
 
 # --- Beam DoFn to publish metrics to Pub/Sub ---
@@ -163,14 +163,14 @@ class PublishMetricsToPubSub(beam.DoFn):
         try:
             self.publisher.publish(self.topic_path, data=data)
         except Exception as e:
-            logging.error(f"❌ Failed to publish message: {e}")
+            logging.error(f"Error occured when publishing message: {e}")
         yield event  # Continue downstream
 
 # --- Beam DoFn to log rows ---
 # This function logs each row processed in the pipeline for debugging purposes.
 class LogRow(beam.DoFn):
     def process(self, element):
-        logging.info(f"🧪 {element}")
+        logging.info(f"Processed {element}")
         yield element
 
 # --- Main runner function ---

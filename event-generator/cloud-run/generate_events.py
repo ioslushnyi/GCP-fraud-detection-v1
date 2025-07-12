@@ -51,9 +51,9 @@ def generate_fake_event():
 def publish_event(event):
     event_data = json.dumps(event).encode("utf-8")
     future = publisher.publish(topic_path, data=event_data)
-    logging.info(f"📤 Published message ID: {future.result()}")
+    logging.info(f"Published message ID: {future.result()}")
 
-logging.info(f"👨‍🔧 Starting event generator with max_events={args.max_events}, max_duration={args.max_duration}s, burst_chance={args.burst_chance}, cooldown={args.cooldown}s")
+logging.info(f"Starting event generator with max_events={args.max_events}, max_duration={args.max_duration}s, burst_chance={args.burst_chance}, cooldown={args.cooldown}s")
 
 events_published = 0
 last_burst_time = 0
@@ -62,7 +62,7 @@ while events_published < args.max_events and (time.time() - start_time < args.ma
         event = generate_fake_event()
         # 2% chance and at least 60 seconds since last burst
         if random.random() <= args.burst_chance and time.time() - last_burst_time > args.cooldown:
-            logging.info(f"🔥 Burst event sequence triggered for user {event['user_id']}")
+            logging.info(f"Burst event sequence triggered for user {event['user_id']}")
 
             for _ in range(random.randrange(5, 8)):
                 publish_event(event)
@@ -73,9 +73,9 @@ while events_published < args.max_events and (time.time() - start_time < args.ma
         else:
             publish_event(event)
     except Exception as e:
-        logging.warning(f"⚠️ Failed to publish event {event} \nError: {e}")
+        logging.warning(f"Error occured when publishing event {event} \nError: {e}")
     # Wait for a while before publishing the next event
     time.sleep(random.uniform(5, 15))
     events_published += 1
 
-logging.info(f"✅ Finished publishing {events_published} events in {int(time.time() - start_time)} seconds.")
+logging.info(f"Finished publishing {events_published} events in {int(time.time() - start_time)} seconds.")

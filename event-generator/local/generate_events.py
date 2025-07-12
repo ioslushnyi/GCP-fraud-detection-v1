@@ -56,7 +56,7 @@ while count < 1000:  # Adjust the number of events as needed
             publish_event(event)
 
     except Exception as e:
-        print(f"Error publishing event: {e}")
+        print(f"Error occured when publishing event {event} \nError: {e}")
     # Wait for a while before publishing the next event
     time.sleep(random.uniform(5, 15))
     count += 1

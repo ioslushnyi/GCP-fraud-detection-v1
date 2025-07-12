@@ -1,9 +1,5 @@
-'''
-This project includes a simple ML model used to predict fraudulent transactions as part of an end-to-end data pipeline. 
-This model uses a Random Forest Classifier integrated into a real-time fraud detection pipeline. 
-It achieves 95.8% accuracy, with nearly perfect legit user recall (99.9%) and high fraud precision (99.8%) and recall (91.5%). 
-The focus here is not on ML complexity, but on showing how a predictive model can be embedded within a scalable, realistic data architecture. 
-It balances fraud detection with user trust — a common constraint in real-world systems.'''
+# This project includes a simple ML model used to predict fraudulent transactions as part of an end-to-end data pipeline. 
+# This model uses a Random Forest Classifier integrated into a real-time fraud detection pipeline. 
 
 import uuid
 import random
@@ -21,7 +17,8 @@ fake = Faker()
 random.seed(42)
 NUM_TRANSACTIONS = 10000
 BLACKLISTED_USERS = [str(uuid.uuid4()) for _ in range(200)]
-REPEATED_USERS = [str(uuid.uuid4()) for _ in range(10)]  # Generate multiple repeated users
+REPEATED_USERS = [str(uuid.uuid4()) for _ in range(10)]
+
 # Mapping currencies to countries
 CURRENCY_COUNTRY_MAPPING = {
     "USD": ["US"],
@@ -30,15 +27,16 @@ CURRENCY_COUNTRY_MAPPING = {
     "GBP": ["UK"],
     "UAH": ["UA"]
 }
+
 user_event_buffer = {}
 
 def generateuser_id():
-    """Generate a user ID, with a 2% chance of being blacklisted."""
+    # Generate a user ID, with a 2% chance of being blacklisted.
     return (
         str(uuid.uuid4()) if random.random() > 0.1 else
         (random.choice(REPEATED_USERS) if random.random() > 0.02 else random.choice(BLACKLISTED_USERS)) 
     )
-# --- Step 1: Data Generator ---
+
 def generate_payment(user_id=None, base_time=None):
     if not user_id:
         user_id = generateuser_id()
@@ -77,15 +75,15 @@ def generate_payment(user_id=None, base_time=None):
         "device": device,
         "is_fraud": is_fraud
     }
-# --- Step 2: Generate Data ---v
-#data = [generate_payment() for _ in range(NUM_TRANSACTIONS)]
+
+# Generate Data
 data = []
 for _ in range(NUM_TRANSACTIONS):
     user_id = generateuser_id()
     base_time = fake.date_time_between(start_date="-30d", end_date="now")
     payment = generate_payment(user_id, base_time)
     data.append(payment)
-    #Compute transaction frequency ---
+    # Compute transaction frequency ---
     if user_id not in user_event_buffer:
         user_event_buffer[user_id] = []
     user_event_buffer[user_id].append(payment["timestamp"])
@@ -104,7 +102,7 @@ df["timestamp"] = pd.to_datetime(df["timestamp"])
 df["hour"] = df["timestamp"].dt.hour
 df = df.sort_values(by=["user_id", "timestamp"])
 
-# --- Step 4: Encode categoricals ---
+# Encode categoricals
 le_currency = LabelEncoder()
 le_country = LabelEncoder()
 le_ip_country = LabelEncoder()
@@ -116,7 +114,7 @@ df["ip_country"] = le_ip_country.fit_transform(df["ip_country"])
 df["device"] = le_device.fit_transform(df["device"])
 df = df.fillna(1)
 
-# --- Step 5: Train model ---
+# Train model
 df = df.drop(columns=["timestamp", "transaction_id", "user_id"])
 X = df.drop("is_fraud", axis=1)
 y = df["is_fraud"]
@@ -125,29 +123,35 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-
-# Save feature columns in the exact order used during training
-feature_order = list(X.columns)
-joblib.dump(feature_order, "feature_order.pkl")
-
-
 feature_importance = model.feature_importances_
 features = X.columns
 
+plt.figure(figsize=(8, 5))
 plt.barh(features, feature_importance)
 plt.xlabel("Importance")
 plt.title("Feature Importance in Fraud Detection Model")
-plt.show()
+plt.savefig("feature_importance.png")
 
 for feat, score in zip(features, feature_importance):
     print(f"{feat}: {score:.4f}")
     
+y_pred = model.predict(X_test)
+classification_report = classification_report(y_test, y_pred, digits=4)
+print("\n--- Classification Report ---")
+print(classification_report)
+
+# Save report to text file
+with open("classification_report.txt", "w") as f:
+    f.write("--- Classification Report ---\n")
+    f.write(classification_report)
+
+# Save feature columns in the exact order used during training
+feature_order = list(X.columns)
+joblib.dump(feature_order, "feature_order.pkl")
+# Save model and encoders
 joblib.dump(model, "fraud_model.pkl")
 joblib.dump(le_currency, "le_currency.pkl")
 joblib.dump(le_country, "le_country.pkl")
 joblib.dump(le_ip_country, "le_ip_country.pkl")
 joblib.dump(le_device, "le_device.pkl")
 
-y_pred = model.predict(X_test)
-print("\n--- Classification Report ---")
-print(classification_report(y_test, y_pred, digits=4))

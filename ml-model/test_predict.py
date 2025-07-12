@@ -38,6 +38,7 @@ features = pd.DataFrame([{
 }])
 print("\n--- Input Features ---")
 print(features)
+
 # Inference
 risk_score = model.predict_proba(features[feature_order])[0][1]
 predicted_label = int(risk_score > 0.5)

@@ -1,0 +1,3 @@
+# Secrets
+.env
+fraud-metrics-exporter/.env
