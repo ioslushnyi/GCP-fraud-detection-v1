@@ -3,13 +3,13 @@ import pandas as pd
 from datetime import datetime, timezone
 
 # Load model and pre-fitted encoders (these should be saved during training)
-model = joblib.load("fraud_model_v3.pkl")
-le_currency = joblib.load("le_currency_v3.pkl")
-le_country = joblib.load("le_country_v3.pkl")
-le_ip_country = joblib.load("le_ip_country_v3.pkl")
-le_device = joblib.load("le_device_v3.pkl")
+model = joblib.load("fraud_model.pkl")
+le_currency = joblib.load("le_currency.pkl")
+le_country = joblib.load("le_country.pkl")
+le_ip_country = joblib.load("le_ip_country.pkl")
+le_device = joblib.load("le_device.pkl")
 # Load expected feature order
-feature_order = joblib.load("feature_order_v3.pkl")
+feature_order = joblib.load("feature_order.pkl")
 
 # Simulated incoming event
 custom_event = {

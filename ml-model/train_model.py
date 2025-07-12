@@ -21,7 +21,6 @@ fake = Faker()
 random.seed(42)
 NUM_TRANSACTIONS = 10000
 BLACKLISTED_USERS = [str(uuid.uuid4()) for _ in range(200)]
-#REPEATED_USERS = str(uuid.uuid4())
 REPEATED_USERS = [str(uuid.uuid4()) for _ in range(10)]  # Generate multiple repeated users
 # Mapping currencies to countries
 CURRENCY_COUNTRY_MAPPING = {
@@ -129,7 +128,7 @@ model.fit(X_train, y_train)
 
 # Save feature columns in the exact order used during training
 feature_order = list(X.columns)
-joblib.dump(feature_order, "feature_order_v3.pkl")
+joblib.dump(feature_order, "feature_order.pkl")
 
 
 feature_importance = model.feature_importances_
@@ -143,11 +142,11 @@ plt.show()
 for feat, score in zip(features, feature_importance):
     print(f"{feat}: {score:.4f}")
     
-joblib.dump(model, "fraud_model_v3.pkl")
-joblib.dump(le_currency, "le_currency_v3.pkl")
-joblib.dump(le_country, "le_country_v3.pkl")
-joblib.dump(le_ip_country, "le_ip_country_v3.pkl")
-joblib.dump(le_device, "le_device_v3.pkl")
+joblib.dump(model, "fraud_model.pkl")
+joblib.dump(le_currency, "le_currency.pkl")
+joblib.dump(le_country, "le_country.pkl")
+joblib.dump(le_ip_country, "le_ip_country.pkl")
+joblib.dump(le_device, "le_device.pkl")
 
 y_pred = model.predict(X_test)
 print("\n--- Classification Report ---")
