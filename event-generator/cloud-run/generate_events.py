@@ -52,7 +52,7 @@ def main():
     def publish_event(event):
         event_data = json.dumps(event).encode("utf-8")
         future = publisher.publish(topic_path, data=event_data)
-        logging.info(f"Published message ID: {future.result()}")
+        logging.info(f"Published message ID: {future.result()}, event: {event}")
 
     logging.info(f"Starting event generator with max_events={args.max_events}, max_duration={args.max_duration}s, burst_chance={args.burst_chance}, cooldown={args.cooldown}s")
 

@@ -169,9 +169,9 @@ class PublishMetricsToPubSub(beam.DoFn):
 # --- Beam DoFn to log rows ---
 # This function logs each row processed in the pipeline for debugging purposes.
 class LogRow(beam.DoFn):
-    def process(self, element):
-        logging.info(f"Processed {element}")
-        yield element
+    def process(self, event):
+        logging.info(f"Processed event: {event}")
+        yield event
 
 # --- Main runner function ---
 # This function sets up the Apache Beam pipeline with the specified options and transforms.
