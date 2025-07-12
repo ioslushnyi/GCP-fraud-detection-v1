@@ -28,9 +28,9 @@ CURRENCY_COUNTRY_MAPPING = {
     "UAH": ["UA"]
 }
 
-user_event_buffer = {}
+user_txn_window = {}
 
-def generateuser_id():
+def generate_user_id():
     # Generate a user ID, with a 2% chance of being blacklisted.
     return (
         str(uuid.uuid4()) if random.random() > 0.1 else
@@ -39,7 +39,7 @@ def generateuser_id():
 
 def generate_payment(user_id=None, base_time=None):
     if not user_id:
-        user_id = generateuser_id()
+        user_id = generate_user_id()
     amount = round(random.uniform(5, 20000), 2)
     currency = random.choice(["USD", "EUR", "PLN", "UAH"]) if random.random() > 0.1 else fake.currency_code()
     if currency in CURRENCY_COUNTRY_MAPPING:
@@ -79,19 +79,19 @@ def generate_payment(user_id=None, base_time=None):
 # Generate Data
 data = []
 for _ in range(NUM_TRANSACTIONS):
-    user_id = generateuser_id()
+    user_id = generate_user_id()
     base_time = fake.date_time_between(start_date="-30d", end_date="now")
     payment = generate_payment(user_id, base_time)
     data.append(payment)
     # Compute transaction frequency ---
-    if user_id not in user_event_buffer:
-        user_event_buffer[user_id] = []
-    user_event_buffer[user_id].append(payment["timestamp"])
-    user_event_buffer[user_id] = [
-        t for t in user_event_buffer[user_id]
+    if user_id not in user_txn_window:
+        user_txn_window[user_id] = []
+    user_txn_window[user_id].append(payment["timestamp"])
+    user_txn_window[user_id] = [
+        t for t in user_txn_window[user_id]
         if (payment["timestamp"] - t).total_seconds() <= 600
     ]
-    payment["txn_count_last_10min"] = len(user_event_buffer[user_id])
+    payment["txn_count_last_10min"] = len(user_txn_window[user_id])
     payment["is_fraud"] = int(
         payment["is_fraud"] or payment["txn_count_last_10min"] > 5
     )  # Mark as fraud if more than 5 transactions in the last 10 minutes
