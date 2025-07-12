@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 start_time = time.time()
 fake = Faker()
-project_id = "fraud-detection-v1"
+project_id = "real-time-fraud-detection"
 topic_id = "payment-events"
 publisher = pubsub_v1.PublisherClient()
 topic_path = publisher.topic_path(project_id, topic_id)

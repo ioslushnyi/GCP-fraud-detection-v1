@@ -5,6 +5,6 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install --no-cache-dir -r requirements.dev.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 CMD ["uvicorn", "export_fraud_metrics:app", "--host", "0.0.0.0", "--port", "8080"]

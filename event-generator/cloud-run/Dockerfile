@@ -11,7 +11,7 @@ WORKDIR /app
 COPY . /app
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.dev.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Set the entrypoint
 ENTRYPOINT ["python", "generate_events.py"]
