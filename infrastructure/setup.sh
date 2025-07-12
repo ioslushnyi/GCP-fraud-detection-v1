@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ─── CONFIGURATION ────────────────────────────────────────────
-PROJECT_ID="freal-time-fraud-detection"
+PROJECT_ID="fraud-detection-v1"
 REGION="us-central1"
 BQ_DATASET="realtime_analytics"
 BQ_TABLE="fraud_scored_events"

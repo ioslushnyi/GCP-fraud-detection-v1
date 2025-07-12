@@ -181,7 +181,7 @@ def run_pipeline():
     if args.runner == "DataflowRunner":
         runner_opts = [
             "--runner=DataflowRunner",
-            "--project=real-time-fraud-detection",
+            "--project=fraud-detection-v1",
             "--region=us-central1",
             "--temp_location=gs://fraud-detection-temp-bucket/temp",
             "--staging_location=gs://fraud-detection-temp-bucket/staging",
@@ -196,7 +196,7 @@ def run_pipeline():
     with beam.Pipeline(options=options) as p:
         (
             p
-            | "ReadFromPubSub" >> beam.io.ReadFromPubSub(subscription="projects/real-time-fraud-detection/subscriptions/payment-events-sub")
+            | "ReadFromPubSub" >> beam.io.ReadFromPubSub(subscription="projects/fraud-detection-v1/subscriptions/payment-events-sub")
             | "DecodePubSub" >> beam.Map(safe_decode)
             | "FilterValid" >> beam.Filter(lambda x: x is not None)
             | "KeyByUser" >> beam.Map(lambda x: (x["user_id"], x)).with_output_types(Tuple[str, dict])
@@ -204,9 +204,9 @@ def run_pipeline():
             | "ScoreEvent" >> beam.Map(score_event)
             | "FilterNone" >> beam.Filter(lambda x: x is not None)
             | "LogRow" >> beam.ParDo(LogRow())
-            | "PublishMetrics" >> beam.ParDo(PublishMetricsToPubSub("projects/real-time-fraud-detection/topics/scored-events-fraud-metrics"))
+            | "PublishMetrics" >> beam.ParDo(PublishMetricsToPubSub("projects/fraud-detection-v1/topics/scored-events-fraud-metrics"))
             | "WriteToBigQuery" >> beam.io.WriteToBigQuery(
-                table="real-time-fraud-detection.realtime_analytics.fraud_scored_events",
+                table="fraud-detection-v1.realtime_analytics.fraud_scored_events",
                 schema={
                     "fields": [
                         {"name": "user_id", "type": "STRING"},
