@@ -73,11 +73,11 @@ def main():
                 last_burst_time = time.time()
             else:
                 publish_event(event)
+                events_published += 1
         except Exception as e:
             logging.warning(f"Error occured when publishing event {event} \nError: {e}")
         # Wait for a while before publishing the next event
         time.sleep(random.uniform(5, 15))
-        events_published += 1
 
     logging.info(f"Finished publishing {events_published} events in {int(time.time() - start_time)} seconds.")
 
