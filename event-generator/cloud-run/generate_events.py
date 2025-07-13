@@ -18,7 +18,8 @@ def main():
     parser.add_argument("--max_events", type=int, default=100)
     parser.add_argument("--max_duration", type=int, default=1200)  # seconds (20 minutes)
     parser.add_argument("--burst_chance", type=float, default=0.02)
-    parser.add_argument("--cooldown", type=int, default=60)  # seconds
+    parser.add_argument("--min_time_between_events", type=int, default=5)
+    parser.add_argument("--cooldown", type=int, default=60,  help='Time in seconds between event bursts')
     parser.add_argument("--project", required=True, help='GCP project ID')
     parser.add_argument('--output_topic', required=True, help='Pub/Sub topic ID for writing raw incoming events')
     args = parser.parse_args()
@@ -62,7 +63,7 @@ def main():
     while events_published < args.max_events and (time.time() - start_time < args.max_duration):
         try:
             event = generate_fake_event()
-            # 2% chance and at least 60 seconds since last burst
+            # 2% chance and at least 60 seconds since last burst by default
             if random.random() <= args.burst_chance and time.time() - last_burst_time > args.cooldown:
                 logging.info(f"Burst event sequence triggered for user {event['user_id']}")
                 for _ in range(random.randrange(5, 8)):
@@ -71,7 +72,7 @@ def main():
                     publish_event(burst_event)
                     events_published += 1
                     # Sleep for a short time to simulate burst
-                    time.sleep(3)
+                    time.sleep(args.min_time_between_events)
                 last_burst_time = time.time()
             else:
                 publish_event(event)
@@ -79,7 +80,7 @@ def main():
         except Exception as e:
             logging.warning(f"Error occured when publishing event {event} \nError: {e}")
         # Wait for a while before publishing the next event
-        time.sleep(random.uniform(7, 15))
+        time.sleep(random.uniform(args.min_time_between_events, args.min_time_between_events * 2))
 
     logging.info(f"Finished publishing {events_published} events in {int(time.time() - start_time)} seconds.")
 
