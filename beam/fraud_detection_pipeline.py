@@ -48,6 +48,7 @@ except Exception as e:
 # This function encodes categorical values using pre-fitted LabelEncoders.
 def safe_encode(encoder, value):
     return encoder.transform([value])[0] if value in encoder.classes_ else -1
+
 # This function decodes bytes to JSON
 def safe_decode(m):
     try:
@@ -55,16 +56,48 @@ def safe_decode(m):
     except Exception as e:
         logging.error(f"Decode error: {e}")
         return None
+
 # This function sets up argument parsing for the pipeline runner.
 def parse_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Fraud Detection Streaming Pipeline")
+    
+    # General options
     parser.add_argument('--runner', default='DirectRunner', choices=['DirectRunner', 'DataflowRunner'])
-    return parser.parse_args()
+    # GCP-specific options (only required for Dataflow)
+    parser.add_argument('--region', help='GCP region')
+    parser.add_argument('--temp_location', help='GCS temp location')
+    parser.add_argument('--staging_location', help='GCS staging location')
+    # Project ID
+    parser.add_argument('--project', required=True, help='GCP project ID')
+    # Pub/Sub topics and subs
+    parser.add_argument('--input_subscription', required=True, help='Full Pub/Sub subscription path for incoming events like: projects/{project_id}/subscriptions/{subscription_id}')
+    parser.add_argument('--output_topic', required=True, help='Full Pub/Sub topic path for writing scored events like: projects/{project_id}/topics/{topic_id}')
+    # BigQuery table
+    parser.add_argument('--output_table', required=True, help='Full BigQuery table path for storing the events like: {project_id}.{dataset_id}.{table_id}')
+
+    args, beam_args = parser.parse_known_args()
+    # Force streaming to True regardless
+    args.streaming = True
+
+    if args.runner == 'DataflowRunner':
+        for name in ['region', 'temp_location', 'staging_location']:
+            if getattr(args, name) is None:
+                parser.error(f"--{name} is required when using DataflowRunner")
+        # Add pipeline-specific options if Dataflow is selected
+        beam_args.extend([
+            f"--region={args.region}",
+            f"--temp_location={args.temp_location}",
+            f"--staging_location={args.staging_location}",
+            f"--requirements_file=beam/requirements.txt",
+        ])
+
+    return args, beam_args
 
 # --- Function to enrich events ---
 # This function formats the event with additional fields for BigQuery.
 def get_enriched_event(event: dict, risk_score: float, fraud_label: int, risk_level: str) -> dict:
     return {
+        "event_id": event["event_id"],
         "user_id": event["user_id"],
         "event_time": event["timestamp"], # "event_time": datetime.fromisoformat(event["timestamp"]).replace(microsecond=0).isoformat() + "Z",
         "amount": float(event["amount"]), # Ensure amount is a float
@@ -116,10 +149,10 @@ class AddTxnCount(beam.DoFn):
 def score_event(event: dict) -> typing.Optional[dict]:
     def get_risk_level(risk_score: float) -> str:
         return  (
-            "critical" if risk_score > 0.9 else
-            "high" if risk_score > 0.7 else
-            "medium" if risk_score > 0.5 else
-            "low" if risk_score > 0.1 else
+            "critical" if risk_score >= 0.9 else
+            "high" if risk_score >= 0.7 else
+            "medium" if risk_score >= 0.4 else
+            "low" if risk_score >= 0.1 else
             "minimal"
         )
     try:
@@ -154,6 +187,7 @@ class PublishMetricsToPubSub(beam.DoFn):
 
     def process(self, event):
         payload = {
+            "event_id": event["event_id"],
             "user_id": event["user_id"],
             "event_time": event["event_time"],
             "fraud_score": event["fraud_score"],
@@ -176,27 +210,15 @@ class LogRow(beam.DoFn):
 # --- Main runner function ---
 # This function sets up the Apache Beam pipeline with the specified options and transforms.
 def run_pipeline():
-    args = parse_args()
-    runner_opts = []
-    if args.runner == "DataflowRunner":
-        runner_opts = [
-            "--runner=DataflowRunner",
-            "--project=fraud-detection-v1",
-            "--region=us-central1",
-            "--temp_location=gs://fraud-detection-temp-bucket/temp",
-            "--staging_location=gs://fraud-detection-temp-bucket/staging",
-            "--streaming",
-            "--requirements_file=beam/requirements.txt"
-        ]
-
-    options = PipelineOptions(runner_opts)
+    args, beam_args = parse_args()
+    options = PipelineOptions(beam_args)
     options.view_as(StandardOptions).runner = args.runner
-    options.view_as(StandardOptions).streaming = True
+    options.view_as(StandardOptions).streaming = args.streaming
 
     with beam.Pipeline(options=options) as p:
         (
             p
-            | "ReadFromPubSub" >> beam.io.ReadFromPubSub(subscription="projects/fraud-detection-v1/subscriptions/payment-events-sub")
+            | "ReadFromPubSub" >> beam.io.ReadFromPubSub(subscription=args.input_subscription)
             | "DecodePubSub" >> beam.Map(safe_decode)
             | "FilterValid" >> beam.Filter(lambda x: x is not None)
             | "KeyByUser" >> beam.Map(lambda x: (x["user_id"], x)).with_output_types(Tuple[str, dict])
@@ -204,11 +226,12 @@ def run_pipeline():
             | "ScoreEvent" >> beam.Map(score_event)
             | "FilterNone" >> beam.Filter(lambda x: x is not None)
             | "LogRow" >> beam.ParDo(LogRow())
-            | "PublishMetrics" >> beam.ParDo(PublishMetricsToPubSub("projects/fraud-detection-v1/topics/scored-events-fraud-metrics"))
+            | "PublishMetrics" >> beam.ParDo(PublishMetricsToPubSub(args.output_topic))
             | "WriteToBigQuery" >> beam.io.WriteToBigQuery(
-                table="fraud-detection-v1.realtime_analytics.fraud_scored_events",
+                table=args.output_table,
                 schema={
                     "fields": [
+                        {"name": "event_id", "type": "STRING"},
                         {"name": "user_id", "type": "STRING"},
                         {"name": "event_time", "type": "TIMESTAMP"},
                         {"name": "amount", "type": "FLOAT"},

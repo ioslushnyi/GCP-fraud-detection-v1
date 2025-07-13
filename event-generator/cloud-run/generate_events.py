@@ -19,14 +19,14 @@ def main():
     parser.add_argument("--max_duration", type=int, default=1200)  # seconds (20 minutes)
     parser.add_argument("--burst_chance", type=float, default=0.02)
     parser.add_argument("--cooldown", type=int, default=60)  # seconds
+    parser.add_argument("--project", required=True, help='GCP project ID')
+    parser.add_argument('--output_topic', required=True, help='Pub/Sub topic ID for writing raw incoming events')
     args = parser.parse_args()
 
+    publisher = pubsub_v1.PublisherClient()
+    topic_path = publisher.topic_path(args.project, args.output_topic)
     start_time = time.time()
     fake = Faker()
-    project_id = "fraud-detection-v1"
-    topic_id = "payment-events"
-    publisher = pubsub_v1.PublisherClient()
-    topic_path = publisher.topic_path(project_id, topic_id)
 
     # Generate a single fake payment event
     def generate_fake_event():
@@ -35,10 +35,11 @@ def main():
         # and 10% use VPN, so we can generate random country code for them
         ip_country = country if random.random() > 0.1 else fake.country_code()
         # 95 of the users are making purchases between 100 and 12000 money units, 5% are making large purchases between 10000 and 20000 money units
-        amount = round(random.uniform(100, 11000), 2) if random.random() > 0.1 else round(random.uniform(10000, 20000), 2)
+        amount = round(random.uniform(100, 12000), 2) if random.random() > 0.1 else round(random.uniform(10000, 20000), 2)
         # 95% of users use USD, EUR, PLN or UAH, 5% use other currencies
         currency = random.choice(["USD", "EUR", "PLN", "UAH"]) if random.random() > 0.05 else fake.currency_code()
         return {
+            "event_id": str(uuid.uuid4()),
             "user_id": str(uuid.uuid4()),
             "amount": amount,
             "currency": currency,
@@ -64,20 +65,21 @@ def main():
             # 2% chance and at least 60 seconds since last burst
             if random.random() <= args.burst_chance and time.time() - last_burst_time > args.cooldown:
                 logging.info(f"Burst event sequence triggered for user {event['user_id']}")
-
                 for _ in range(random.randrange(5, 8)):
-                    publish_event(event)
+                    burst_event = event.copy()
+                    burst_event["event_id"] = str(uuid.uuid4())
+                    publish_event(burst_event)
                     events_published += 1
                     # Sleep for a short time to simulate burst
                     time.sleep(3)
                 last_burst_time = time.time()
             else:
                 publish_event(event)
+                events_published += 1
         except Exception as e:
             logging.warning(f"Error occured when publishing event {event} \nError: {e}")
         # Wait for a while before publishing the next event
-        time.sleep(random.uniform(5, 15))
-        events_published += 1
+        time.sleep(random.uniform(7, 15))
 
     logging.info(f"Finished publishing {events_published} events in {int(time.time() - start_time)} seconds.")
 

@@ -13,9 +13,10 @@ feature_order = joblib.load("feature_order.pkl")
 
 # Simulated incoming event
 custom_event = {
+    "event_id": "event_123",
     "user_id": "user_2",
     "timestamp": datetime.now(timezone.utc),
-    "amount": 9999.0,
+    "amount": 14600.0,
     "currency": "EUR",
     "country": "PL",
     "ip_country": "DE",
