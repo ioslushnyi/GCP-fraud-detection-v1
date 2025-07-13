@@ -170,22 +170,16 @@
       },
       "id": 2,
       "options": {
-        "displayLabels": [
-          "percent"
-        ],
+        "displayLabels": ["percent"],
         "legend": {
           "displayMode": "table",
           "placement": "right",
           "showLegend": true,
-          "values": [
-            "value"
-          ]
+          "values": ["value"]
         },
         "pieType": "pie",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -267,7 +261,7 @@
               },
               {
                 "color": "#EAB839",
-                "value": 0.5
+                "value": 0.4
               },
               {
                 "color": "#EF843C",
@@ -328,7 +322,7 @@
             "mode": "thresholds"
           },
           "custom": {
-            "align": "auto",
+            "align": "left",
             "cellOptions": {
               "type": "auto",
               "wrapText": false
@@ -352,7 +346,56 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "event_id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 329
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 181
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "risk_level"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 102
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "fraud_score"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 118
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -364,20 +407,19 @@
       "options": {
         "cellHeight": "sm",
         "footer": {
-          "countRows": false,
+          "countRows": true,
           "enablePagination": false,
           "fields": "",
-          "reducer": [
-            "count"
-          ],
+          "reducer": ["count"],
           "show": true
         },
-        "showHeader": true
+        "showHeader": true,
+        "sortBy": []
       },
       "pluginVersion": "12.1.0-91038.patch3-91166",
       "targets": [
         {
-          "query": "from(bucket: \"fraud-metrics\")\r\n  |> range(start: -2h)\r\n  |> filter(fn: (r) => r._measurement == \"fraud_events\")\r\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\r\n  |> filter(fn: (r) => r.risk_level == \"critical\")\r\n  |> keep(columns: [\"_time\", \"user_id\", \"fraud_score\", \"risk_level\"])\r\n  |> group()\r\n  |> sort(columns: [\"_time\"], desc: true)\r\n",
+          "query": "from(bucket: \"fraud-metrics\")\r\n  |> range(start: -2h)\r\n  |> filter(fn: (r) => r._measurement == \"fraud_events\")\r\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\r\n  |> filter(fn: (r) => r.risk_level == \"critical\")\r\n  |> keep(columns: [\"_time\", \"event_id\", \"user_id\", \"fraud_score\", \"risk_level\"])\r\n  |> group()\r\n  |> sort(columns: [\"_time\"], desc: true)\r\n",
           "refId": "A",
           "datasource": {
             "type": "influxdb",
@@ -400,7 +442,7 @@
             "mode": "thresholds"
           },
           "custom": {
-            "align": "auto",
+            "align": "left",
             "cellOptions": {
               "type": "auto"
             },
@@ -423,7 +465,44 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "fraud_score"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 156
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 214
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "risk_level"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 193
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 7,
@@ -435,21 +514,15 @@
       "options": {
         "cellHeight": "sm",
         "footer": {
-          "countRows": false,
+          "countRows": true,
+          "enablePagination": false,
           "fields": "",
-          "reducer": [
-            "count"
-          ],
-          "show": true
+          "reducer": ["count"],
+          "show": false
         },
         "frameIndex": 0,
         "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "fraud_score 00b84d76-3927-40c6-bab7-294dae5e46b0"
-          }
-        ]
+        "sortBy": []
       },
       "pluginVersion": "12.1.0-91038.patch3-91166",
       "targets": [
@@ -473,14 +546,14 @@
     "list": []
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Fraud Detection Metrics",
+  "title": "Fraud Detection Real-Time Monitoring",
   "uid": "cad58c8d-1eb5-402f-846f-cb2dfcf5ebd2",
-  "version": 69,
+  "version": 81,
   "weekStart": "",
   "id": null
 }
