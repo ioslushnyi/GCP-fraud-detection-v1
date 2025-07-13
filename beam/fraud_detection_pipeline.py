@@ -85,6 +85,7 @@ def parse_args():
                 parser.error(f"--{name} is required when using DataflowRunner")
         # Add pipeline-specific options if Dataflow is selected
         beam_args.extend([
+            f"--project={args.project}",
             f"--region={args.region}",
             f"--temp_location={args.temp_location}",
             f"--staging_location={args.staging_location}",
