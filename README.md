@@ -60,4 +60,6 @@ Orchestration: Cloud Scheduler
 ## Setup
 
 The script for setting up the project locally can be found in infrastructure folder:
-<pre> ```./infrastructure/setup.sh``` </pre>
+```
+./infrastructure/setup.sh
+```
