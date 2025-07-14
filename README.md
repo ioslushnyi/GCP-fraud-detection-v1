@@ -1,7 +1,8 @@
 # Real-Time Fraud Detection with GCP
 
-A real-time fraud detection system that simulates payment events, scores them using a trained ML model, and routes activity to analytics & monitoring services. Built on Google Cloud Platform.\
-This project demonstrates how to integrate streaming, monitoring, and machine learning into a real-time fraud detection system.
+A real-time fraud detection system that simulates payment events, scores them using a trained ML model, and routes activity to analytics & monitoring services.\
+This project demonstrates how to integrate streaming, monitoring, and machine learning into a real-time fraud detection system.\
+Built on Google Cloud Platform.
 
 ![Grafana Demo](/dashboards/images/animation_grafana.gif)
 
