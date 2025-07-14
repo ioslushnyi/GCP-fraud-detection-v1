@@ -1,20 +1,28 @@
-## Real-Time Fraud Detection with GCP
+# Real-Time Fraud Detection with GCP
 
-## Project Objective:
-
-Build a real-time fraud detection system to analyse incoming payment data streams using Google Cloud Platform
+A real-time fraud detection system simulating payment events, scoring transactions using a trained ML model, and routing high-risk activity to alerting & analytics platforms. Built on Google Cloud Platform, this project demonstrates which tools can be used for streaming, pipeline orchestration, monitoring, and ML integration.
 
 ## Goal
 
-Simulate a real-time system where user events (payment) are streamed in, enriched, cleaned, and sent to BigQuery for live dashboards.
+Simulate a real-time system where user events (payments) are streamed in, enriched & scored by ML model, stored for analytics & reporting, and sent to real-time monitoring service.
 
 ## Tech Stack:
 
-Event Source: Simulated user events (Python script) - Running via Cloud Run
-Ingestion: GCP Pub/Sub
-Processing: Dataflow (Apache Beam, Python SDK)
-Storage: BigQuery + raw events into GCS (using native ub/Sub subscription to Cloud Storage)
-Dashboard/Visualization: Looker Studio
+Cloud Infrastructure: Google Cloud Platform (GCP)
+Extraction: Python script running on Cloud Run (push)
+Ingestion: Pub/Sub
+Stream Processing: Apache Beam (Python SDK), Dataflow
+Messaging: Pub/Sub
+Storage: BigQuery, Google Cloud Storage, Looker Studio
+Analytics & Reporting: BigQuery, Looker Studio
+Real-Time Monitoring: InfluxDB, Grafana Cloud
+API & Serving: Cloud Run, FastAPI
+ML Model: Python, scikit-learn, joblib
+Orchestration: Cloud Scheduler
+
+## Architecture
+
+![Architecture diagram - Real-Time Fraud Detection](/diagrams/architecture.png)
 
 ## Data Lifecycle Overview
 
@@ -51,4 +59,5 @@ Dashboard/Visualization: Looker Studio
 
 ## Setup
 
-pip install -r requirements.txt
+The script for setting up the project locally can be found in infrastructure folder:
+`./infrastructure/setup.sh`
