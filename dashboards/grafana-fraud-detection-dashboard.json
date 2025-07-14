@@ -94,7 +94,7 @@
               {
                 "id": "color",
                 "value": {
-                  "fixedColor": "green",
+                  "fixedColor": "#58bb4b",
                   "mode": "fixed"
                 }
               }
@@ -154,7 +154,7 @@
               {
                 "id": "color",
                 "value": {
-                  "fixedColor": "orange",
+                  "fixedColor": "#ff9831",
                   "mode": "fixed"
                 }
               }
@@ -252,23 +252,23 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "semi-dark-green",
                 "value": 0
               },
               {
-                "color": "#6ED0E0",
+                "color": "blue",
                 "value": 0.1
               },
               {
-                "color": "#EAB839",
+                "color": "semi-dark-yellow",
                 "value": 0.4
               },
               {
-                "color": "#EF843C",
+                "color": "semi-dark-orange",
                 "value": 0.7
               },
               {
-                "color": "red",
+                "color": "semi-dark-red",
                 "value": 0.9
               }
             ]
@@ -565,7 +565,7 @@
   "timezone": "browser",
   "title": "Fraud Detection Real-Time Monitoring",
   "uid": "cad58c8d-1eb5-402f-846f-cb2dfcf5ebd2",
-  "version": 99,
+  "version": 104,
   "weekStart": "",
   "id": null
 }
