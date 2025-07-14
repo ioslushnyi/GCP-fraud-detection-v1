@@ -6,12 +6,16 @@ from faker import Faker
 import json
 import uuid
 import random
+import argparse
 
-fake = Faker()
-project_id = "fraud-detection-v1"
-topic_id = "payment-events"
+parser = argparse.ArgumentParser()
+parser.add_argument("--project", default='fraud-detection-v1', help='GCP project ID')
+parser.add_argument('--output_topic', default='payment-events', help='Pub/Sub topic ID for writing raw incoming events')
+args = parser.parse_args()
+
 publisher = pubsub_v1.PublisherClient()
-topic_path = publisher.topic_path(project_id, topic_id)
+topic_path = publisher.topic_path(args.project, args.output_topic)
+fake = Faker()
 
 # Generate a single fake payment event
 def generate_fake_event():
@@ -24,6 +28,7 @@ def generate_fake_event():
     # 95% of users use USD, EUR, PLN or UAH, 5% use other currencies
     currency = random.choice(["USD", "EUR", "PLN", "UAH"]) if random.random() > 0.05 else fake.currency_code()
     return {
+        "event_id": str(uuid.uuid4()),
         "user_id": str(uuid.uuid4()),
         "amount": amount,
         "currency": currency,
@@ -48,17 +53,20 @@ while count < 1000:  # Adjust the number of events as needed
         if (random.random() <= 0.02 ):
             print(f"Burst event sequence triggered for user {event['user_id']}")
             for _ in range(random.randrange(5,8)):
-                publish_event(event)
+                burst_event = event.copy()
+                burst_event["event_id"] = str(uuid.uuid4())
+                publish_event(burst_event)
                 count += 1
                 # Sleep for a short time to simulate burst
                 time.sleep(3)
         else:
             publish_event(event)
+            count += 1
 
     except Exception as e:
         print(f"Error occured when publishing event {event} \nError: {e}")
     # Wait for a while before publishing the next event
     time.sleep(random.uniform(5, 15))
-    count += 1
+
 
 print(f"Published {count} events.")

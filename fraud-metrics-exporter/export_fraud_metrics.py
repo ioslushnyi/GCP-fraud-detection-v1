@@ -63,9 +63,10 @@ async def pubsub_push_handler(request: Request):
 
         point = (
             Point("fraud_events")
-            .tag("user_id", str(event.get("user_id", "unknown")))
-            .field("risk_level", str(event.get("risk_level", "unknown")))
-            .field("fraud_score", float(event.get("fraud_score", 0)))
+            .tag("event_id", str(event.get("event_id")))
+            .tag("risk_level", str(event.get("risk_level")))
+            .field("user_id", str(event.get("user_id")))
+            .field("fraud_score", float(event.get("fraud_score")))
             .time(ns_timestamp, WritePrecision.NS)
         )
 
