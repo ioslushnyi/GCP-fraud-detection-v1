@@ -27,23 +27,23 @@ Simulate a real-time fraud detection system where user events (payments) are str
 
 ## Data Flow
 
-1. Cloud Scheduler triggers the Payments Generator to run on Cloud Run Job
-2. Events are sent to Pub/Sub _payment-events_ topic and Stored to GCS (via native Pub/Sub subscription)
+1. Cloud Scheduler triggers the Payments Generator to run on a Cloud Run Job
+2. Events are sent to Pub/Sub _payment-events_ topic and stored to GCS (via native Pub/Sub subscription)
 3. Events are then consumed by Dataflow, where:
-   - Apache Beam Pipeline reads from Pub/Sub (pull subscription)
-   - Events are scored by an ML model
+   - Apache Beam pipeline reads from Pub/Sub (pull subscription)
+   - Events are scored by ML model
    - Risk level is assigned to each event
 4. From the pipeline results are sent to:
    - BigQuery for storage & analytics
-   - Pub/Sub _scored-events_ topic → Consumed by FastAPI on Cloud Run Service → InfluxDB for real-time monitoring
-5. Dashboards in Looker Studio and Grafana Cloud present analytics/metrics
+   - Pub/Sub _scored-events_ topic → Consumed by FastAPI on a Cloud Run Service → Sent to InfluxDB for real-time monitoring
+5. Dashboards in Looker Studio and Grafana Cloud present analytics and real-time metrics, respectively
 
 ## How It Works
 
 - ML model (Random Forest Classifier) is pre-trained to classify fraudulent payments
 - Apache Beam pipeline loads the model and performs the scoring
 - The pipeline enriches each event with a fraud_score and a corresponding risk_level
-- Messages are routed based on output needs (storage, monitoring)
+- Messages are routed to storage, analytics and monitoring
 
 ## Dashboards
 
@@ -57,7 +57,7 @@ BigQuery views used by Looker Studio are available in [./bigquery/views](bigquer
 
 ## Setup
 
-The script for setting up the project locally can be found in infrastructure folder:
+The script for setting up the project is located in the infrastructure folder:
 
 ```
 ./infrastructure/setup.sh
