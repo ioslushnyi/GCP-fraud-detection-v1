@@ -8,7 +8,7 @@ A real-time fraud detection system simulating payment events, scoring transactio
 
 Simulate a real-time system where user events (payments) are streamed in, enriched & scored by ML model, stored for analytics and sent to real-time monitoring service.
 
-## Tech Stack:
+## Tech Stack
 
 - **Cloud Infrastructure:** Google Cloud Platform (GCP)
 - **Extraction:** Payments Generator (Python + [Faker](https://faker.readthedocs.io/en/master/))
@@ -47,9 +47,15 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
 ## Dashboards
 
 - ### [Grafana Cloud](https://ihorslushnyi.grafana.net/public-dashboards/c58a9a27503147cda341f799c3a84ad6)
-  [![Grafana Cloud](/dashboards/images/grafana-preview.png)](https://ihorslushnyi.grafana.net/public-dashboards/c58a9a27503147cda341f799c3a84ad6)
+  [![Grafana Cloud](/dashboards/images/grafana_preview.png)](https://ihorslushnyi.grafana.net/public-dashboards/c58a9a27503147cda341f799c3a84ad6)
 - ### [Looker Studio](https://lookerstudio.google.com/embed/reporting/a3a86a23-b364-4f25-8ff8-aef881fb0ad6/page/DlyQF)
-  [![Looker Studio](/dashboards/images/looker-studio-preview.png)](https://lookerstudio.google.com/embed/reporting/a3a86a23-b364-4f25-8ff8-aef881fb0ad6/page/DlyQF)
+  [![Looker Studio](/dashboards/images/looker_studio_preview.png)](https://lookerstudio.google.com/embed/reporting/a3a86a23-b364-4f25-8ff8-aef881fb0ad6/page/DlyQF)
+
+### BigQuery Views
+BigQuery views used by Looker Studio are available in:
+```
+./bigquery/views
+```
 
 ## Setup
 
