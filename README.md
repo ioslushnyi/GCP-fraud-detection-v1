@@ -2,7 +2,7 @@
 
 A real-time fraud detection system simulating payment events, scoring transactions using a trained ML model, and routing high-risk activity to alerting & analytics platforms. Built on Google Cloud Platform, this project demonstrates which tools can be used for streaming, pipeline orchestration, monitoring, and ML integration.
 
-![Grafana Demo](/dashboards/animation_grafana.gif)
+![Grafana Demo](/dashboards/images/animation_grafana.gif)
 
 ## Goal
 
@@ -47,9 +47,9 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
 
 ## Dashboards
 - ### [Grafana Cloud](https://ihorslushnyi.grafana.net/public-dashboards/c58a9a27503147cda341f799c3a84ad6)
-   [![Grafana Cloud](/dashboards/grafana-preview.png)](https://ihorslushnyi.grafana.net/public-dashboards/c58a9a27503147cda341f799c3a84ad6)
+   [![Grafana Cloud](/dashboards/images/grafana-preview.png)](https://ihorslushnyi.grafana.net/public-dashboards/c58a9a27503147cda341f799c3a84ad6)
 - ### [Looker Studio](https://lookerstudio.google.com/embed/reporting/a3a86a23-b364-4f25-8ff8-aef881fb0ad6/page/DlyQF)
-   [![Looker Studio](/dashboards/looker-studio-preview.png)](https://lookerstudio.google.com/embed/reporting/a3a86a23-b364-4f25-8ff8-aef881fb0ad6/page/DlyQF)
+   [![Looker Studio](/dashboards/images/looker-studio-preview.png)](https://lookerstudio.google.com/embed/reporting/a3a86a23-b364-4f25-8ff8-aef881fb0ad6/page/DlyQF)
 
 ## Setup
 
