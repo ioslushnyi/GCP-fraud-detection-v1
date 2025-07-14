@@ -1,12 +1,13 @@
 # Real-Time Fraud Detection with GCP
 
-A real-time fraud detection system simulating payment events, scoring transactions using a trained ML model, and routing high-risk activity to alerting & analytics platforms. Built on Google Cloud Platform, this project demonstrates how to integrate streaming, orchestration, monitoring, and machine learning into a real-time fraud detection system.
+A real-time fraud detection system that simulates payment events, scores them using a trained ML model, and routes activity to analytics & monitoring services. Built on Google Cloud Platform.\
+This project demonstrates how to integrate streaming, monitoring, and machine learning into a real-time fraud detection system.
 
 ![Grafana Demo](/dashboards/images/animation_grafana.gif)
 
 ## Goal
 
-Simulate a real-time system where user events (payments) are streamed in, enriched & scored by ML model, stored for analytics and sent to real-time monitoring service.
+Simulate a real-time fraud detection system where user events (payments) are streamed in, enriched & scored by ML model, stored for analytics and sent to real-time monitoring service.
 
 ## Tech Stack
 
@@ -14,11 +15,11 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
 - **Extraction:** Payments Generator (Python + [Faker](https://faker.readthedocs.io/en/master/))
 - **Ingestion:** Pub/Sub
 - **Stream Processing:** [Apache Beam](https://beam.apache.org/) (Python SDK), Dataflow
+- **ML Model:** Python, [scikit-learn](https://scikit-learn.org/), [joblib](https://joblib.readthedocs.io/en/stable/)
 - **Storage:** BigQuery, Google Cloud Storage
 - **Analytics & Reporting:** BigQuery, [Looker Studio](https://lookerstudio.google.com/u/0/navigation/reporting)
-- **Real-Time Monitoring:** [InfluxDB Cloud](https://www.influxdata.com/products/influxdb-cloud/serverless/), [Grafana Cloud](https://grafana.com/products/cloud/)
 - **API & Serving:** Cloud Run, [FastAPI](https://fastapi.tiangolo.com/)
-- **ML Model:** Python, [scikit-learn](https://scikit-learn.org/), [joblib](https://joblib.readthedocs.io/en/stable/)
+- **Real-Time Monitoring:** [InfluxDB Cloud](https://www.influxdata.com/products/influxdb-cloud/serverless/), [Grafana Cloud](https://grafana.com/products/cloud/)
 - **Scheduling / Automation:** Cloud Scheduler
 
 ## Architecture
@@ -35,7 +36,7 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
 4. From the pipeline results are sent to:
    - BigQuery for storage & analytics
    - Pub/Sub _scored-events_ topic → Consumed by FastAPI on Cloud Run Service → InfluxDB for real-time monitoring
-5. Dashboards in Looker Studio and Grafana Cloud present anylytics/metrics
+5. Dashboards in Looker Studio and Grafana Cloud present analytics/metrics
 
 ## How It Works
 
