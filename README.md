@@ -26,7 +26,7 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
 
 ## Data Flow
 
-1. Cloud Scheduler triggers the Payments Generator to run on Cloud Run
+1. Cloud Scheduler triggers the Payments Generator to run on Cloud Run Job
 2. Events are sent to Pub/Sub _payment-events_ topic and Stored to GCS (via native Pub/Sub subscription)
 3. Events are then consumed by Dataflow, where:
    - Apache Beam Pipeline reads from Pub/Sub (pull subscription)
@@ -34,8 +34,14 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
    - Risk level is assigned to each event
 4. From the pipeline result is sent to:
    - BigQuery for storage & analytics
-   - Pub/Sub _scored-events_ topic → Consumed by FastAPI on Cloud Run → InfluxDB for real-time monitoring
+   - Pub/Sub _scored-events_ topic → Consumed by FastAPI on Cloud Run Service → InfluxDB for real-time monitoring
 5. Looker Studio and Grafana Cloud surface the results
+
+## How It Works
+- ML model (Random Forest Classifier) is pre-trained to classify fraudulent payments
+- Apache Beam pipeline loads the model and performs the scoring
+- Beam adds the fraud_score and risk_level to each message
+- Messages are routed based on output needs (storage, monitoring)
 
 ## Setup
 
