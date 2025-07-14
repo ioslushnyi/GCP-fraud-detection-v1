@@ -46,10 +46,11 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
 - Messages are routed based on output needs (storage, monitoring)
 
 ## Dashboards
-- [Grafana Cloud](https://ihorslushnyi.grafana.net/public-dashboards/c58a9a27503147cda341f799c3a84ad6)
-- ### Looker Studio
-- [![Looker Studio](/dashboards/looker-studio-preview.png)](https://lookerstudio.google.com/embed/reporting/a3a86a23-b364-4f25-8ff8-aef881fb0ad6/page/DlyQF)
-- 
+- ### [Grafana Cloud](https://ihorslushnyi.grafana.net/public-dashboards/c58a9a27503147cda341f799c3a84ad6)
+   [![Grafana Cloud](/dashboards/grafana-preview.png)](https://ihorslushnyi.grafana.net/public-dashboards/c58a9a27503147cda341f799c3a84ad6)
+- ### [Looker Studio](https://lookerstudio.google.com/embed/reporting/a3a86a23-b364-4f25-8ff8-aef881fb0ad6/page/DlyQF)
+   [![Looker Studio](/dashboards/looker-studio-preview.png)](https://lookerstudio.google.com/embed/reporting/a3a86a23-b364-4f25-8ff8-aef881fb0ad6/page/DlyQF)
+
 ## Setup
 
 The script for setting up the project locally can be found in infrastructure folder:
