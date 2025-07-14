@@ -2,6 +2,7 @@
 
 A real-time fraud detection system simulating payment events, scoring transactions using a trained ML model, and routing high-risk activity to alerting & analytics platforms. Built on Google Cloud Platform, this project demonstrates which tools can be used for streaming, pipeline orchestration, monitoring, and ML integration.
 
+![Grafana Demo](./dashboards/grafana-demo.gif)
 ## Goal
 
 Simulate a real-time system where user events (payments) are streamed in, enriched & scored by ML model, stored for analytics & reporting, and sent to real-time monitoring service.
@@ -43,6 +44,9 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
 - Beam adds the fraud_score and risk_level to each message
 - Messages are routed based on output needs (storage, monitoring)
 
+## Dashboards
+- [Grafana Cloud](https://www.linkedin.com/in/ihor-slushnyi-a7b9441b4/)
+- Looker Studio
 ## Setup
 
 The script for setting up the project locally can be found in infrastructure folder:
