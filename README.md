@@ -26,16 +26,16 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
 
 ## Data Flow
 
-**1.** Cloud Scheduler triggers the Payments Generator to run on Cloud Run Job\
-**2.** Events are sent to Pub/Sub _payment-events_ topic and Stored to GCS (via native Pub/Sub subscription)\
-**3.** Events are then consumed by Dataflow, where:\
+1. Cloud Scheduler triggers the Payments Generator to run on Cloud Run Job
+2. Events are sent to Pub/Sub _payment-events_ topic and Stored to GCS (via native Pub/Sub subscription)
+3. Events are then consumed by Dataflow, where:
  - Apache Beam Pipeline reads from Pub/Sub (pull subscription)
  - Events are scored by an ML model
  - Risk level is assigned to each event
-**4.** From the pipeline results are sent to:\
+4. From the pipeline results are sent to:
  - BigQuery for storage & analytics
  - Pub/Sub _scored-events_ topic → Consumed by FastAPI on Cloud Run Service → InfluxDB for real-time monitoring
-**5.** Dashboards in Looker Studio and Grafana Cloud present anylytics/metrics
+5. Dashboards in Looker Studio and Grafana Cloud present anylytics/metrics
 
 ## How It Works
 
