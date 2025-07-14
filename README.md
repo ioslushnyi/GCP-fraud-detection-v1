@@ -63,3 +63,10 @@ The script for setting up the project locally can be found in infrastructure fol
 ```
 ./infrastructure/setup.sh
 ```
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+## Contact
+Please feel free to contact me if you have any questions.
+[Ihor Slushnyi](https://www.linkedin.com/in/ihor-slushnyi-a7b9441b4/)
