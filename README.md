@@ -2,6 +2,7 @@
 
 A real-time fraud detection system simulating payment events, scoring transactions using a trained ML model, and routing high-risk activity to alerting & analytics platforms. Built on Google Cloud Platform, this project demonstrates which tools can be used for streaming, pipeline orchestration, monitoring, and ML integration.
 
+![Grafana Demo](/dashboards/grafana-demo.gif)
 ## Goal
 
 Simulate a real-time system where user events (payments) are streamed in, enriched & scored by ML model, stored for analytics & reporting, and sent to real-time monitoring service.
@@ -26,48 +27,26 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
 
 ## Data Flow
 
-1. Cloud Scheduler triggers the Payments Generator to run on Cloud Run
+1. Cloud Scheduler triggers the Payments Generator to run on Cloud Run Job
 2. Events are sent to Pub/Sub _payment-events_ topic and Stored to GCS (via native Pub/Sub subscription)
 3. Events are then consumed by Dataflow, where:
-   Apache Beam Pipeline reads from Pub/Sub (pull subscription)
-   Events are scored by an ML model
-   Risk level is assigned to each event
+   - Apache Beam Pipeline reads from Pub/Sub (pull subscription)
+   - Events are scored by an ML model
+   - Risk level is assigned to each event
 4. From the pipeline result is sent to:
-   BigQuery for storage & analytics
-   Pub/Sub _scored-events_ topic → Consumed by FastAPI on Cloud Run → InfluxDB for real-time monitoring
+   - BigQuery for storage & analytics
+   - Pub/Sub _scored-events_ topic → Consumed by FastAPI on Cloud Run Service → InfluxDB for real-time monitoring
 5. Looker Studio and Grafana Cloud surface the results
 
-6. Ingestion - Simulate and ingest payment data
-   Tool: Custom Python script using Faker + Pub/Sub
+## How It Works
+- ML model (Random Forest Classifier) is pre-trained to classify fraudulent payments
+- Apache Beam pipeline loads the model and performs the scoring
+- Beam adds the fraud_score and risk_level to each message
+- Messages are routed based on output needs (storage, monitoring)
 
-- Use Python + Faker to generate fake transactions
-- Simulate irregular patterns (e.g. large amount, strange hours, IP mismatch)
-- Push records to Pub/Sub using google-cloud-pubsub
-
-2. Streaming Ingestion with Pub/Sub
-   Tool: GCP Pub/Sub
-
-- Acts as the real-time ingestion pipe
-- Multiple subscriptions can consume the stream
-
-3. Transformation / Scoring / Enrichment
-   Tool: Apache Beam on Dataflow
-
-- Beam Pipeline reads from Pub/Sub
-- Enrich with reference data or other streams
-- Feature engineering and fraud scoring (using ML algorithm "Random Forest Classifier", sklearn lib)
-- Route suspicious events to separate sink
-
-4. Load (Real-time Sink)
-   Tool: BigQuery streaming insert
-
-- Write transformed data into BigQuery
-- Use partitioned/clustering tables
-
-5. Visual presentation / Serving
-
-- Looker studio, dashboards
-
+## Dashboards
+- [Grafana Cloud](https://www.linkedin.com/in/ihor-slushnyi-a7b9441b4/)
+- Looker Studio
 ## Setup
 
 The script for setting up the project locally can be found in infrastructure folder:
