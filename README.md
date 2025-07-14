@@ -22,9 +22,7 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
 - **Scheduling / Automation:** Cloud Scheduler
 
 ## Architecture
----
 ![Architecture diagram - Real-Time Fraud Detection](/diagrams/architecture.png)
----
 
 ## Data Flow
 
