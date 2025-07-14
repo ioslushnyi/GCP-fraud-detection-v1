@@ -18,13 +18,8 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
 - **Analytics & Reporting:** BigQuery, [Looker Studio](https://lookerstudio.google.com/u/0/navigation/reporting)
 - **Real-Time Monitoring:** [InfluxDB Cloud](https://www.influxdata.com/products/influxdb-cloud/serverless/), [Grafana Cloud](https://grafana.com/products/cloud/)
 - **API & Serving:** Cloud Run, [FastAPI](https://fastapi.tiangolo.com/)
-<<<<<<< HEAD
-- **ML Model:** Python, [scikit-learn](https://scikit-learn.org/), joblib
-- **Scheduling / Automation:** Cloud Scheduler
-=======
 - **ML Model:** Python, [scikit-learn](https://scikit-learn.org/), [joblib](https://joblib.readthedocs.io/en/stable/)
-- **Orchestration:** Cloud Scheduler
->>>>>>> 3af77cb1bde59bc6792171e5b4c68ca1c66810ec
+- **Scheduling / Automation:** Cloud Scheduler
 
 ## Architecture
 
