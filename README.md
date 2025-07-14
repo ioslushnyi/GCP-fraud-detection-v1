@@ -18,7 +18,7 @@ Analytics & Reporting: BigQuery, Looker Studio\
 Real-Time Monitoring: InfluxDB, Grafana Cloud\
 API & Serving: Cloud Run, FastAPI\
 ML Model: Python, scikit-learn, joblib\
-Orchestration: Cloud Scheduler\
+Orchestration: Cloud Scheduler
 
 ## Architecture
 
