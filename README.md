@@ -11,13 +11,13 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
 Cloud Infrastructure: Google Cloud Platform (GCP)\
 Extraction: Python script running on Cloud Run (push)\
 Ingestion: Pub/Sub\
-Stream Processing: Apache Beam (Python SDK), Dataflow\
+Stream Processing: [Apache Beam](https://beam.apache.org/) (Python SDK), Dataflow\
 Messaging: Pub/Sub\
 Storage: BigQuery, Google Cloud Storage, Looker Studio\
 Analytics & Reporting: BigQuery, Looker Studio\
-Real-Time Monitoring: InfluxDB, Grafana Cloud\
-API & Serving: Cloud Run, FastAPI\
-ML Model: Python, scikit-learn, joblib\
+Real-Time Monitoring: [InfluxDB Cloud](https://www.influxdata.com/products/influxdb-cloud/serverless/), [Grafana Cloud](https://grafana.com/products/cloud/)\
+API & Serving: Cloud Run, [FastAPI](https://fastapi.tiangolo.com/)\
+ML Model: Python, [scikit-learn](https://scikit-learn.org/), joblib\
 Orchestration: Cloud Scheduler
 
 ## Architecture
