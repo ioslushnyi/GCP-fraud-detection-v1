@@ -6,12 +6,12 @@ A real-time fraud detection system simulating payment events, scoring transactio
 
 ## Goal
 
-Simulate a real-time system where user events (payments) are streamed in, enriched & scored by ML model, stored for analytics & reporting, and sent to real-time monitoring service.
+Simulate a real-time system where user events (payments) are streamed in, enriched & scored by ML model, stored for analytics and sent to real-time monitoring service.
 
 ## Tech Stack:
 
 - **Cloud Infrastructure:** Google Cloud Platform (GCP)
-- **Extraction:** payments generator (Python + [Faker](https://faker.readthedocs.io/en/master/))
+- **Extraction:** Payments Generator (Python + [Faker](https://faker.readthedocs.io/en/master/))
 - **Ingestion:** Pub/Sub
 - **Stream Processing:** [Apache Beam](https://beam.apache.org/) (Python SDK), Dataflow
 - **Storage:** BigQuery, Google Cloud Storage
@@ -41,7 +41,7 @@ Simulate a real-time system where user events (payments) are streamed in, enrich
 
 - ML model (Random Forest Classifier) is pre-trained to classify fraudulent payments
 - Apache Beam pipeline loads the model and performs the scoring
-- Beam adds the fraud_score and risk_level to each message
+- The pipeline enriches each event with a fraud_score and a corresponding risk_level
 - Messages are routed based on output needs (storage, monitoring)
 
 ## Dashboards
