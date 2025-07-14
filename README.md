@@ -35,7 +35,7 @@ Simulate a real-time fraud detection system where user events (payments) are str
    - Risk level is assigned to each event
 4. From the pipeline results are sent to:
    - BigQuery for storage & analytics
-   - Pub/Sub _scored-events_ topic → Consumed by FastAPI on a Cloud Run Service → Sent to InfluxDB for real-time monitoring
+   - Pub/Sub _scored-events_ topic (push subscription) → Consumed by FastAPI on a Cloud Run Service → Sent to InfluxDB for real-time monitoring
 5. Dashboards in Looker Studio and Grafana Cloud present analytics and real-time metrics, respectively
 
 ## How It Works
