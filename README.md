@@ -1,8 +1,7 @@
 # Real-Time Fraud Detection with GCP
 
 A real-time fraud detection system that simulates payment events, scores them using a trained ML model, and routes results to analytics & monitoring platforms.\
-This project demonstrates how to integrate streaming, monitoring, and machine learning into a real-time fraud detection system.\
-Built on Google Cloud Platform.
+This project demonstrates how to integrate streaming (Dataflow), monitoring (InfluxDB + Grafana), and machine learning (scikit-learn) into a production-style pipeline.
 
 ![Grafana Demo](/dashboards/images/animation_grafana.gif)
 
@@ -34,9 +33,11 @@ Simulate a real-time fraud detection system where user events (payments) are str
    - Apache Beam pipeline reads from Pub/Sub (pull subscription)
    - Events are scored by ML model
    - Risk level is assigned to each event
-4. From the pipeline results are sent to:
-   - BigQuery for storage & analytics
-   - Pub/Sub _scored-events_ topic (push subscription) → Consumed by FastAPI on a Cloud Run Service → Sent to InfluxDB for real-time monitoring
+4. From the pipeline results are routed to:
+   - BigQuery for storage and analytics
+   - Pub/Sub _scored-events_ topic
+      - Events are pushed via a Pub/Sub subscription and consumed by a FastAPI service running on Cloud Run
+      - The service then sends the data to InfluxDB for real-time monitoring
 5. Dashboards in Looker Studio and Grafana Cloud present analytics and real-time metrics, respectively
 
 ## How It Works
