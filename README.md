@@ -12,7 +12,7 @@ Simulate a real-time fraud detection system where user events (payments) are str
 ## Tech Stack
 
 - **Cloud Infrastructure:** Google Cloud Platform (GCP)
-- **Extraction:** Payments Generator (Python + [Faker](https://faker.readthedocs.io/en/master/))
+- **Extraction:** [event-generator](/event-generator/cloud-run/) (Python + [Faker](https://faker.readthedocs.io/en/master/))
 - **Ingestion:** Pub/Sub
 - **Stream Processing:** [Apache Beam](https://beam.apache.org/) (Python SDK), Dataflow
 - **ML Model:** Python, [scikit-learn](https://scikit-learn.org/), [joblib](https://joblib.readthedocs.io/en/stable/)
