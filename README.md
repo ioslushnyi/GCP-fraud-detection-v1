@@ -62,7 +62,7 @@ The output `fraud_score` is a probability from 0 to 1. Based on this score:
   - `high`: >= 0.7
   - `medium`: >= 0.4
   - `low`: >= 0.1
-  - `minimal`: ≤ 0.09
+  - `minimal`: < 0.1
 
 For implementation details and model structure, see [`ml-model/`](ml-model/).
 
