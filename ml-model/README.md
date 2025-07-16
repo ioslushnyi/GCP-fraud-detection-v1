@@ -1,5 +1,4 @@
 This directory contains training code, encoders, and a trained ML model used in the real-time fraud detection pipeline.
-The fraud detection model is a binary classifier (Random Forest Classifier) that predicts whether a payment event is fraudulent based on engineered features. 
 
 ## Contents
 
@@ -16,7 +15,7 @@ The fraud detection model is a binary classifier (Random Forest Classifier) that
 - `feature_importance.png`: Visualized feature importance chart
 
 ## Fraud Detection Logic
-The model is trained on synthetic payment data generated with [Faker](https://faker.readthedocs.io/en/master/) and custom fraud rules. These rules emulate common fraud patterns.
+The fraud detection model is a binary classifier (Random Forest Classifier) that predicts whether a payment event is fraudulent based on engineered features. The model is trained using [scikit-learn](https://scikit-learn.org/) library on synthetic payment data generated with [Faker](https://faker.readthedocs.io/en/master/) and custom fraud rules. These rules emulate common fraud patterns.
 
 ### Labeling Logic
 An event is labeled as fraud (`is_fraud = 1`) if any of the following conditions are met (with added randomness for realism):
