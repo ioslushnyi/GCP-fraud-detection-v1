@@ -26,7 +26,7 @@ An event is labeled as fraud (`is_fraud = 1`) if any of the following conditions
   - Transaction occurs at night (hour < 5 or > 23)
   - Country/currency mismatch (e.g., "USD" in "PL")
   - IP country differs from billing country
-- User has made > 5 transactions within 10 minutes
+- User has made > 5 transactions within 10 minutes\
 A 10% randomness is introduced to reduce model overfitting to limited patterns.
 
 ### Input Features
