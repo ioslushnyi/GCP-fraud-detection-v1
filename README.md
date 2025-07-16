@@ -25,14 +25,16 @@ Simulate a real-time fraud detection system where user events (payments) are str
 ## Architecture
 ![Architecture diagram - Real-Time Fraud Detection](/diagrams/architecture.png)
 
-## Data Flow
+## How It Works
+
+### Data Flow
 
 1. Cloud Scheduler triggers the Payments Generator to run on a Cloud Run Job
 2. Events are sent to Pub/Sub _payment-events_ topic and stored to GCS (via native Pub/Sub subscription)
 3. Events are then consumed by Dataflow, where:
    - Apache Beam pipeline reads from Pub/Sub (pull subscription)
    - Events are scored by ML model
-   - Risk level is assigned to each event
+   - Risk level and a corresponding fraud score is assigned to each event
 4. From the pipeline results are routed to:
    - BigQuery for storage and analytics
    - Pub/Sub _scored-events_ topic
@@ -40,12 +42,29 @@ Simulate a real-time fraud detection system where user events (payments) are str
       - The service then sends the data to InfluxDB for real-time monitoring
 5. Dashboards in Looker Studio and Grafana Cloud present analytics and real-time metrics, respectively
 
-## How It Works
+### Fraud Detection Logic
 
-- ML model (Random Forest Classifier) is pre-trained to classify fraudulent payments
-- Apache Beam pipeline loads the model and performs the scoring
-- The pipeline enriches each event with a fraud_score and a corresponding risk_level
-- Messages are routed to storage, analytics and monitoring
+Each payment event is scored using a pre-trained Random Forest Classifier model. The model uses the following features:
+
+- `amount`
+- `currency` (label-encoded)
+- `country` (label-encoded)
+- `ip_country` (label-encoded)
+- `device` (label-encoded)
+- `hour` (UTC)
+- `txn_count_last_10min` (per user)
+
+The output `fraud_score` is a probability from 0 to 1. Based on this score:
+
+- `fraud_label = 1` if `fraud_score > 0.5`, else `0`
+- `risk_level` is assigned as:
+  - `critical`: >= 0.9
+  - `high`: >= 0.7
+  - `medium`: >= 0.4
+  - `low`: >= 0.1
+  - `minimal`: ≤ 0.09
+
+For implementation details and model structure, see [`ml-model/`](ml-model/).
 
 ## Dashboards
 
