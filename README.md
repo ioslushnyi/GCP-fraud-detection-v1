@@ -74,7 +74,7 @@ For implementation details and model structure, see [`ml-model/`](ml-model/).
   [![Looker Studio](/dashboards/images/looker_studio_preview.png)](https://lookerstudio.google.com/embed/reporting/a3a86a23-b364-4f25-8ff8-aef881fb0ad6/page/DlyQF)
 
 ### BigQuery Views
-BigQuery views used by Looker Studio are available in [bigquery/views](bigquery/views)
+BigQuery views used by Looker Studio are available in [bigquery/views](bigquery/views/).
 
 ## Setup
 
