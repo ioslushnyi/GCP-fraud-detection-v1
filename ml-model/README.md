@@ -56,7 +56,7 @@ Risk level is also inferred from `fraud_score`:
 ```
 python train_model.py
 ```
-## How to test
+  ## How to Test
 You can use `test_predict.py` and modify event to test model
 ```
 python test_predict.py
