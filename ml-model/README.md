@@ -1,6 +1,6 @@
 This directory contains training code, encoders, and a trained ML model used in the real-time fraud detection pipeline.
 
-##Contents
+## Contents
 
 - `train_model.py`: Script used to train the fraud detection model
 - `test_predict.py`: Script for testing predictions on a sample input
@@ -14,7 +14,7 @@ This directory contains training code, encoders, and a trained ML model used in 
 - `classification_report.txt`: Model evaluation summary
 - `feature_importance.png`: Visualized feature importance chart
 
-##Fraud Detection Logic
+## Fraud Detection Logic
 
 The fraud detection model is a binary classifier that predicts whether a payment event is fraudulent based on engineered features. It was trained on synthetic data using the following inputs:
 
@@ -38,11 +38,11 @@ Risk level is also inferred from `fraud_score`:
 | >= 0.10	  | low  |
 | < 0.10	  | minimal  |
 
-##How to Re-Train
+## How to Re-Train
 ```
 python train_model.py
 ```
-##How to test
+## How to test
 You can use `test_predict.py` and modify event to test model
 ```
 python test_predict.py
