@@ -1,5 +1,5 @@
 This directory contains training code, encoders, and a trained ML model used in the real-time fraud detection pipeline.
-The fraud detection model is a binary classifier(Random Forest Classifier) that predicts whether a payment event is fraudulent based on engineered features. 
+The fraud detection model is a binary classifier (Random Forest Classifier) that predicts whether a payment event is fraudulent based on engineered features. 
 
 ## Contents
 
