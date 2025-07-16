@@ -29,7 +29,7 @@ Simulate a real-time fraud detection system where user events (payments) are str
 
 ### Data Flow
 
-1. Cloud Scheduler triggers the Payments Generator to run on a Cloud Run Job
+1. Cloud Scheduler triggers the [event-generator](event-generator/) to run on a Cloud Run Job
 2. Events are sent to Pub/Sub _payment-events_ topic and stored to GCS (via native Pub/Sub subscription)
 3. Events are then consumed by Dataflow, where:
    - Apache Beam pipeline reads from Pub/Sub (pull subscription)
@@ -38,7 +38,7 @@ Simulate a real-time fraud detection system where user events (payments) are str
 4. From the pipeline results are routed to:
    - BigQuery for storage and analytics
    - Pub/Sub _scored-events_ topic
-      - Events are pushed via a Pub/Sub subscription and consumed by a FastAPI service running on Cloud Run
+      - Events are pushed via a Pub/Sub subscription and consumed by [fraud-metrics-exporter](fraud-metrics-exporter/) service running on Cloud Run
       - The service then sends the data to InfluxDB for real-time monitoring
 5. Dashboards in Looker Studio and Grafana Cloud present analytics and real-time metrics, respectively
 
