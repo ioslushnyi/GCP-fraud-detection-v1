@@ -16,7 +16,7 @@ The fraud detection model is a binary classifier (Random Forest Classifier) that
 - `feature_importance.png`: Visualized feature importance chart
 
 ## Fraud Detection Logic
-The model is trained on synthetic payment data generated with Faker and custom fraud rules. These rules emulate common fraud patterns.
+The model is trained on synthetic payment data generated with [Faker](https://faker.readthedocs.io/en/master/) and custom fraud rules. These rules emulate common fraud patterns.
 
 ### Labeling Logic
 An event is labeled as fraud (`is_fraud = 1`) if any of the following conditions are met (with added randomness for realism):
