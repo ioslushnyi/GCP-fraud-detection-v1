@@ -1,7 +1,7 @@
 # Real-Time Fraud Detection with GCP
 
 A real-time fraud detection system that simulates payment events, scores them using a trained ML model, and routes results to analytics & monitoring platforms.\
-This project demonstrates how to integrate streaming (Dataflow), monitoring (InfluxDB + Grafana), and machine learning (scikit-learn) into a production-style pipeline.
+This project demonstrates how to integrate streaming (Dataflow), monitoring (InfluxDB + Grafana), and machine learning (scikit-learn) to detect fraudulent payments.
 
 ![Grafana Demo](/dashboards/images/animation_grafana.gif)
 
